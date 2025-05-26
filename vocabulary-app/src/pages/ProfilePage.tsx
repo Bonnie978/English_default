@@ -21,7 +21,7 @@ const ProfilePage: React.FC = () => {
     masteredWords: 372,
     studyHours: 128
   });
-  const [weeklyData, setWeeklyData] = useState([
+  const [weeklyData] = useState([
     { day: '周一', words: 25 },
     { day: '周二', words: 40 },
     { day: '周三', words: 30 },
@@ -36,7 +36,6 @@ const ProfilePage: React.FC = () => {
     soundEnabled: true
   });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   
   const navigate = useNavigate();
   
@@ -45,7 +44,6 @@ const ProfilePage: React.FC = () => {
     const fetchUserData = async () => {
       try {
         setLoading(true);
-        setError(null);
         
         // 获取学习统计
         const statsResponse = await api.get('/words/stats');
@@ -68,7 +66,6 @@ const ProfilePage: React.FC = () => {
         }
       } catch (err: any) {
         console.error('获取用户数据失败:', err);
-        setError('获取用户数据失败');
         // 使用默认数据
         setUserStats({
           totalWords: 480,

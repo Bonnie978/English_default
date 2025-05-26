@@ -74,7 +74,7 @@ const WriteEditor: React.FC<WriteEditorProps> = ({
     updateCounts(value);
     checkWordUsage(value);
     adjustHeight();
-  }, [value, targetWords]);
+  }, [value, targetWords, updateCounts, checkWordUsage, adjustHeight]);
 
   // 插入目标单词
   const insertWord = (word: string) => {

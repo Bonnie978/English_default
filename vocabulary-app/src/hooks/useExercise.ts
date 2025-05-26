@@ -126,7 +126,7 @@ export const useExercise = () => {
     } finally {
       setSubmitting(false);
     }
-  }, [exercise, answers]);
+  }, [exercise]);
 
   // 检查是否所有问题都已回答
   const isAllAnswered = useCallback(() => {
