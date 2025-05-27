@@ -24,10 +24,5 @@
       "src": "/(.*)",
       "dest": "/vocabulary-app/build/index.html"
     }
-  ],
-  "functions": {
-    "vocabulary-api/api/index.ts": {
-      "runtime": "nodejs18.x"
-    }
-  }
+  ]
 } 
