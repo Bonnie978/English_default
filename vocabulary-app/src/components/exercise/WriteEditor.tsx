@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
 
 interface WriteEditorProps {
@@ -24,7 +24,7 @@ const WriteEditor: React.FC<WriteEditorProps> = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // 检查单词使用情况
-  const checkWordUsage = (text: string) => {
+  const checkWordUsage = useCallback((text: string) => {
     if (!text.trim()) {
       setUsedWords([]);
       onWordUsageChange?.([]);
@@ -40,17 +40,26 @@ const WriteEditor: React.FC<WriteEditorProps> = ({
 
     setUsedWords(foundWords);
     onWordUsageChange?.(foundWords);
-  };
+  }, [targetWords, onWordUsageChange]);
 
   // 计算字数和字符数
-  const updateCounts = (text: string) => {
+  const updateCounts = useCallback((text: string) => {
     setCharCount(text.length);
     
     // 简单的英文单词计数：按空格分割
     const words = text.trim().split(/\s+/);
     const wordCount = text.trim() === '' ? 0 : words.length;
     setWordCount(wordCount);
-  };
+  }, []);
+
+  // 自动调整文本框高度
+  const adjustHeight = useCallback(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = Math.max(textarea.scrollHeight, parseInt(minHeight)) + 'px';
+    }
+  }, [minHeight]);
 
   // 处理文本变化
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -60,21 +69,12 @@ const WriteEditor: React.FC<WriteEditorProps> = ({
     checkWordUsage(newValue);
   };
 
-  // 自动调整文本框高度
-  const adjustHeight = () => {
-    const textarea = textareaRef.current;
-    if (textarea) {
-      textarea.style.height = 'auto';
-      textarea.style.height = Math.max(textarea.scrollHeight, parseInt(minHeight)) + 'px';
-    }
-  };
-
   // 初始化和文本变化时更新统计
   useEffect(() => {
     updateCounts(value);
     checkWordUsage(value);
     adjustHeight();
-  }, [value, targetWords, updateCounts, checkWordUsage, adjustHeight]);
+  }, [value, updateCounts, checkWordUsage, adjustHeight]);
 
   // 插入目标单词
   const insertWord = (word: string) => {

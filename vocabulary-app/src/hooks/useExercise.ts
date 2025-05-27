@@ -96,14 +96,6 @@ export const useExercise = () => {
       setSubmitting(true);
       setError(null);
       
-      // 这里应该调用API提交答案
-      // const response = await api.post(`/exercises/${exercise.id}/submit`, {
-      //   answers: exercise.questions.map(question => ({
-      //     questionId: question.id,
-      //     answer: answers[question.id] || ''
-      //   }))
-      // });
-      
       // 模拟API调用
       await new Promise(resolve => setTimeout(resolve, 2000));
       
