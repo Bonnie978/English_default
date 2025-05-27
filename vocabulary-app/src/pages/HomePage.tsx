@@ -38,11 +38,23 @@ const HomePage: React.FC = () => {
       }
     } catch (error: any) {
       console.error('HomePage: Error fetching stats:', error);
-      // 如果是认证错误，显示友好提示
-      if (error.response?.status === 401) {
+      
+      // 如果是后端不可用（生产环境）
+      if (error.message === 'Backend not available in production') {
+        console.log('HomePage: Backend not available, using mock data');
+        // 使用模拟数据
+        setStats({
+          totalWordsLearned: 0,
+          masteredWords: 0,
+          streakDays: 0,
+          totalExercises: 0
+        });
+        setError(null); // 不显示错误
+      } else if (error.response?.status === 401) {
+        // 如果是认证错误，显示友好提示
         setError('请先登录以查看学习统计');
       } else {
-        setError(error.message || '获取统计数据失败，请稍后再试');
+        setError('学习统计功能暂时不可用');
       }
     } finally {
       setStatsLoading(false);

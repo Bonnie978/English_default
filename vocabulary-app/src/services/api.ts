@@ -1,108 +1,72 @@
+import axios from 'axios';
 import { supabase } from '../config/supabase';
 
-// 学习统计数据接口
-interface LearningStats {
-  totalWordsLearned: number;
-  masteredWords: number;
-  streakDays: number;
-  totalExercises: number;
-}
-
-// Supabase API 服务
-const api = {
-  // 获取学习统计数据
-  get: async (endpoint: string) => {
-    console.log('API: Using Supabase for endpoint:', endpoint);
-    
-    if (endpoint === '/words/stats') {
-      try {
-        // 获取当前用户
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) {
-          throw new Error('User not authenticated');
-        }
-
-        // 从Supabase获取用户的学习统计数据
-        // 这里可以查询用户的学习记录表
-        const { data: userProgress, error } = await supabase
-          .from('user_progress')
-          .select('*')
-          .eq('user_id', user.id);
-
-        if (error) {
-          console.warn('Supabase query error:', error);
-          // 如果表不存在或查询失败，返回默认数据
-          return {
-            data: {
-              success: true,
-              stats: {
-                totalWordsLearned: 0,
-                masteredWords: 0,
-                streakDays: 0,
-                totalExercises: 0
-              }
-            }
-          };
-        }
-
-        // 计算统计数据
-        const stats: LearningStats = {
-          totalWordsLearned: userProgress?.length || 0,
-          masteredWords: userProgress?.filter((p: any) => p.mastery_level >= 5).length || 0,
-          streakDays: 0, // 可以后续实现
-          totalExercises: 0 // 可以后续实现
-        };
-
-        return {
-          data: {
-            success: true,
-            stats
-          }
-        };
-      } catch (error) {
-        console.error('Supabase API error:', error);
-        // 返回默认数据而不是抛出错误
-        return {
-          data: {
-            success: true,
-            stats: {
-              totalWordsLearned: 0,
-              masteredWords: 0,
-              streakDays: 0,
-              totalExercises: 0
-            }
-          }
-        };
-      }
-    }
-
-    // 其他端点的默认处理
-    return {
-      data: {
-        success: true,
-        data: null
-      }
-    };
-  },
-
-  // POST 请求
-  post: async (endpoint: string, data: any) => {
-    console.log('API: Supabase POST to:', endpoint, data);
-    return { data: { success: true } };
-  },
-
-  // PUT 请求
-  put: async (endpoint: string, data: any) => {
-    console.log('API: Supabase PUT to:', endpoint, data);
-    return { data: { success: true } };
-  },
-
-  // DELETE 请求
-  delete: async (endpoint: string) => {
-    console.log('API: Supabase DELETE to:', endpoint);
-    return { data: { success: true } };
+// 根据环境设置API地址
+const getApiBaseUrl = () => {
+  // 开发环境
+  if (process.env.NODE_ENV === 'development') {
+    return 'http://localhost:3001/api';
   }
+  
+  // 生产环境 - 暂时返回空，因为后端还没部署
+  // TODO: 替换为实际的生产环境后端地址
+  return process.env.REACT_APP_API_URL || '';
 };
+
+const api = axios.create({
+  baseURL: getApiBaseUrl(),
+  timeout: 10000, // 10秒超时
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// 请求拦截器添加token
+api.interceptors.request.use(
+  async (config) => {
+    // 如果没有baseURL，跳过请求
+    if (!config.baseURL) {
+      console.log('API: No backend URL configured, skipping request');
+      return Promise.reject(new Error('Backend not available in production'));
+    }
+    
+    try {
+      // 优先从Supabase获取token
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        config.headers.Authorization = `Bearer ${session.access_token}`;
+        console.log('API: Using Supabase token');
+      } else {
+        // 如果没有Supabase token，尝试localStorage（向后兼容）
+        const token = localStorage.getItem('token');
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+          console.log('API: Using localStorage token');
+        } else {
+          console.log('API: No token available');
+        }
+      }
+    } catch (error) {
+      console.warn('API: Failed to get auth token:', error);
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// 响应拦截器处理错误
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // 处理401未授权错误，但不强制跳转
+    if (error.response && error.response.status === 401) {
+      console.warn('API: 401 Unauthorized - token may be invalid or expired');
+      // 清除可能过期的token
+      localStorage.removeItem('token');
+      // 不强制跳转，让路由保护组件处理认证状态
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default api; 
