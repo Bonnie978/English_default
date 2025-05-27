@@ -9,30 +9,34 @@
       }
     },
     {
-      "src": "vocabulary-api/src/index.ts",
+      "src": "vocabulary-api/api/index.ts",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/vocabulary-api/src/index.ts"
+      "dest": "/vocabulary-api/api/index.ts"
     },
     {
       "src": "/static/(.*)",
-      "dest": "/vocabulary-app/static/$1"
+      "dest": "/vocabulary-app/build/static/$1"
     },
     {
       "src": "/manifest.json",
-      "dest": "/vocabulary-app/manifest.json"
+      "dest": "/vocabulary-app/build/manifest.json"
     },
     {
-      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|ico|svg))",
-      "dest": "/vocabulary-app/$1"
+      "src": "/favicon.ico",
+      "dest": "/vocabulary-app/build/favicon.ico"
+    },
+    {
+      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|ico|svg|json))",
+      "dest": "/vocabulary-app/build/$1"
     },
     {
       "src": "/(.*)",
-      "dest": "/vocabulary-app/index.html"
+      "dest": "/vocabulary-app/build/index.html"
     }
   ],
   "env": {

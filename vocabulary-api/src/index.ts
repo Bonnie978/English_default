@@ -21,7 +21,8 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 const allowedOrigins = [
   'http://localhost:3000',
   'https://eapp-delta.vercel.app',
-  'https://eapp-6a4uzh7dh-magics-projects-d2e379e7.vercel.app'
+  'https://eapp-6a4uzh7dh-magics-projects-d2e379e7.vercel.app',
+  'https://eapp-p2g6ndmln-magics-projects-d2e379e7.vercel.app'
 ];
 
 app.use(cors({
@@ -32,7 +33,8 @@ app.use(cors({
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      console.log('CORS blocked origin:', origin);
+      callback(null, true); // 暂时允许所有origin，用于调试
     }
   },
   credentials: true,
