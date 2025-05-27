@@ -25,6 +25,14 @@ const HomePage: React.FC = () => {
   
   // 获取学习统计数据
   const fetchStats = useCallback(async () => {
+    // 如果用户未登录，不调用API
+    if (!user) {
+      console.log('HomePage: User not logged in, skipping stats fetch');
+      setStatsLoading(false);
+      setError('请先登录以查看学习统计');
+      return;
+    }
+
     try {
       setStatsLoading(true);
       setError(null);
@@ -48,7 +56,7 @@ const HomePage: React.FC = () => {
     } finally {
       setStatsLoading(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     console.log('HomePage: useEffect triggered, user:', !!user, 'loading:', loading);
@@ -528,4 +536,4 @@ const TypeValue = styled.p`
   margin-top: 0.125rem;
 `;
 
-export default HomePage; 
+export default HomePage;
