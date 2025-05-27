@@ -13,14 +13,10 @@
       "use": "@vercel/node"
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "/vocabulary-api/api/index.ts"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/vocabulary-app/build/$1"
+      "source": "/api/(.*)",
+      "destination": "/vocabulary-api/api/index.ts"
     }
   ],
   "installCommand": "cd vocabulary-app && npm install && cd ../vocabulary-api && npm install",
