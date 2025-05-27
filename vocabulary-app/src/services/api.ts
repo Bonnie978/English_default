@@ -3,13 +3,18 @@ import { supabase } from '../config/supabase';
 
 // 根据环境设置API地址
 const getApiBaseUrl = () => {
-  // 开发环境
-  if (process.env.NODE_ENV === 'development') {
-    return 'http://localhost:3001/api';
+  // 如果设置了环境变量，优先使用（用于分开部署）
+  if (process.env.REACT_APP_API_URL) {
+    return process.env.REACT_APP_API_URL;
   }
   
-  // 生产环境 - 使用相对路径调用同域名下的API
-  return '/api';
+  // 开发环境
+  if (process.env.NODE_ENV === 'development') {
+    return 'http://localhost:3001';
+  }
+  
+  // 生产环境 - 使用相对路径调用同域名下的API（用于单体部署）
+  return '';
 };
 
 const api = axios.create({
