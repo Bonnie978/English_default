@@ -22,7 +22,8 @@ const allowedOrigins = [
   'http://localhost:3000',
   'https://eapp-delta.vercel.app',
   'https://eapp-6a4uzh7dh-magics-projects-d2e379e7.vercel.app',
-  'https://eapp-p2g6ndmln-magics-projects-d2e379e7.vercel.app'
+  'https://eapp-p2g6ndmln-magics-projects-d2e379e7.vercel.app',
+  'https://eapp-b4yeapx37-magics-projects-d2e379e7.vercel.app'
 ];
 
 app.use(cors({
@@ -71,7 +72,7 @@ const initializeDatabase = async () => {
 // 在每个请求前确保数据库连接（仅在需要时）
 app.use(async (req, res, next) => {
   // 只对API路由初始化数据库
-  if (req.path.startsWith('/auth') || req.path.startsWith('/words') || req.path.startsWith('/exercises') || req.path.startsWith('/supabase')) {
+  if (req.path.startsWith('/api/auth') || req.path.startsWith('/api/words') || req.path.startsWith('/api/exercises') || req.path.startsWith('/api/supabase')) {
     await initializeDatabase();
   }
   next();
@@ -114,6 +115,20 @@ app.get('/debug', (req, res) => {
   });
 });
 
+// API 调试路由
+app.get('/api/debug', (req, res) => {
+  res.json({
+    message: 'API debug endpoint working!',
+    path: req.path,
+    originalUrl: req.originalUrl,
+    method: req.method,
+    headers: req.headers,
+    query: req.query,
+    environment: process.env.NODE_ENV,
+    timestamp: new Date().toISOString()
+  });
+});
+
 // 测试路由
 app.get('/test', (req, res) => {
   res.json({
@@ -125,11 +140,11 @@ app.get('/test', (req, res) => {
   });
 });
 
-// 添加API路由 - 在Vercel中，移除/api前缀，因为路由已经处理了
-app.use('/auth', authRoutes);
-app.use('/words', wordRoutes);
-app.use('/exercises', exerciseRoutes);
-app.use('/supabase', supabaseRoutes);
+// 添加API路由 - 添加 /api 前缀以匹配 Vercel 重写后的路径
+app.use('/api/auth', authRoutes);
+app.use('/api/words', wordRoutes);
+app.use('/api/exercises', exerciseRoutes);
+app.use('/api/supabase', supabaseRoutes);
 
 // 处理未找到的路由
 app.all('*', (req, res, next) => {
