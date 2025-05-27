@@ -3,6 +3,13 @@
   "buildCommand": "cd vocabulary-app && npm install && npm run build",
   "outputDirectory": "vocabulary-app/build",
   "installCommand": "cd vocabulary-api && npm install",
+  "public": true,
+  "builds": [
+    {
+      "src": "vocabulary-api/api/index.ts",
+      "use": "@vercel/node"
+    }
+  ],
   "headers": [
     {
       "source": "/api/(.*)",
@@ -20,12 +27,34 @@
           "value": "Content-Type, Authorization"
         }
       ]
+    },
+    {
+      "source": "/manifest.json",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        }
+      ]
     }
   ],
-  "rewrites": [
+  "routes": [
     {
-      "source": "/api/(.*)",
-      "destination": "/vocabulary-api/api/index.ts"
+      "src": "/api/(.*)",
+      "dest": "/vocabulary-api/api/index.ts"
     }
   ]
 } 
