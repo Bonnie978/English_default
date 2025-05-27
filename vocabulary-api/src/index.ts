@@ -41,15 +41,21 @@ app.use(cors({
   optionsSuccessStatus: 200
 }));
 
-// 数据库连接（仅在非Vercel环境中）
+// 数据库连接（简化版）
 let dbConnected = false;
 const initializeDatabase = async () => {
   if (!dbConnected) {
     try {
-      await connectMongoDB();
-      await connectRedis();
+      // 在serverless环境中，只连接MongoDB，跳过Redis
+      if (process.env.NODE_ENV === 'production') {
+        await connectMongoDB();
+        console.log('🔌 MongoDB connected (production)');
+      } else {
+        await connectMongoDB();
+        await connectRedis();
+        console.log('🔌 Database connected (development)');
+      }
       dbConnected = true;
-      console.log('🔌 Database connected');
     } catch (error) {
       console.error('Database connection failed:', error);
       // 在serverless环境中，不要退出进程
@@ -60,9 +66,12 @@ const initializeDatabase = async () => {
   }
 };
 
-// 在每个请求前确保数据库连接
+// 在每个请求前确保数据库连接（仅在需要时）
 app.use(async (req, res, next) => {
-  await initializeDatabase();
+  // 只对API路由初始化数据库
+  if (req.path.startsWith('/auth') || req.path.startsWith('/words') || req.path.startsWith('/exercises') || req.path.startsWith('/supabase')) {
+    await initializeDatabase();
+  }
   next();
 });
 
@@ -73,7 +82,9 @@ app.get('/', (req, res) => {
   res.json({ 
     message: 'Welcome to Vocabulary App API with Supabase',
     environment: process.env.NODE_ENV || 'development',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    path: req.path,
+    method: req.method
   });
 });
 
@@ -84,15 +95,28 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     service: 'vocabulary-api',
     database: 'supabase',
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
+    dbConnected: dbConnected
   });
 });
 
-// 添加API路由
-app.use('/api/auth', authRoutes);
-app.use('/api/words', wordRoutes);
-app.use('/api/exercises', exerciseRoutes);
-app.use('/api/supabase', supabaseRoutes);
+// 调试路由
+app.get('/debug', (req, res) => {
+  res.json({
+    path: req.path,
+    method: req.method,
+    headers: req.headers,
+    query: req.query,
+    environment: process.env.NODE_ENV,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// 添加API路由 - 注意：在Vercel中，路由已经包含/api前缀
+app.use('/auth', authRoutes);
+app.use('/words', wordRoutes);
+app.use('/exercises', exerciseRoutes);
+app.use('/supabase', supabaseRoutes);
 
 // 处理未找到的路由
 app.all('*', (req, res, next) => {

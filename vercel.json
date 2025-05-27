@@ -19,8 +19,20 @@
       "dest": "/vocabulary-api/src/index.ts"
     },
     {
-      "src": "/(.*)",
+      "src": "/static/(.*)",
+      "dest": "/vocabulary-app/static/$1"
+    },
+    {
+      "src": "/manifest.json",
+      "dest": "/vocabulary-app/manifest.json"
+    },
+    {
+      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|ico|svg))",
       "dest": "/vocabulary-app/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/vocabulary-app/index.html"
     }
   ],
   "env": {
