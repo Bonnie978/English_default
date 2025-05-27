@@ -7,16 +7,23 @@
       "config": {
         "distDir": "build"
       }
+    },
+    {
+      "src": "vocabulary-api/src/index.ts",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/vocabulary-api/$1"
+      "dest": "/vocabulary-api/src/index.ts"
     },
     {
       "src": "/(.*)",
       "dest": "/vocabulary-app/$1"
     }
-  ]
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
 } 

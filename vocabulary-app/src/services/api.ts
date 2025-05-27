@@ -8,9 +8,8 @@ const getApiBaseUrl = () => {
     return 'http://localhost:3001/api';
   }
   
-  // 生产环境 - 暂时返回空，因为后端还没部署
-  // TODO: 替换为实际的生产环境后端地址
-  return process.env.REACT_APP_API_URL || '';
+  // 生产环境 - 使用相对路径调用同域名下的API
+  return '/api';
 };
 
 const api = axios.create({
@@ -24,12 +23,6 @@ const api = axios.create({
 // 请求拦截器添加token
 api.interceptors.request.use(
   async (config) => {
-    // 如果没有baseURL，跳过请求
-    if (!config.baseURL) {
-      console.log('API: No backend URL configured, skipping request');
-      return Promise.reject(new Error('Backend not available in production'));
-    }
-    
     try {
       // 优先从Supabase获取token
       const { data: { session } } = await supabase.auth.getSession();
