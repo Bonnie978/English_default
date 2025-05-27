@@ -7,16 +7,16 @@
       "config": {
         "distDir": "build"
       }
+    },
+    {
+      "src": "vocabulary-api/api/index.ts",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
     {
-      "src": "/api/health",
-      "dest": "/api/health.ts"
-    },
-    {
-      "src": "/api/words/stats",
-      "dest": "/api/words/stats.ts"
+      "src": "/api/(.*)",
+      "dest": "/vocabulary-api/api/index.ts"
     },
     {
       "src": "/static/(.*)",
