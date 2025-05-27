@@ -3,6 +3,14 @@
 ## 概述
 本项目现在支持前后端分开部署，每个部分都有独立的 Vercel 配置。
 
+## ⚠️ 重要：准备工作
+
+**在开始分开部署之前，必须删除或重命名根目录的 `vercel.json` 文件！**
+
+根目录的 `vercel.json` 会干扰分开部署，因为 Vercel 会优先使用它。请确保：
+- 删除根目录的 `vercel.json` 文件，或者
+- 将其重命名为 `vercel.json.backup`
+
 ## 部署步骤
 
 ### 1. 部署后端 API (vocabulary-api)
@@ -62,7 +70,7 @@ English_default/
 │   ├── src/
 │   ├── public/
 │   └── package.json
-└── vercel.json             ← 原始配置（可以删除）
+└── vercel.json.backup      ← 原始配置（已重命名）
 ```
 
 ## 优势
