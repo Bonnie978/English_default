@@ -17,7 +17,7 @@ interface LearningStats {
 
 const HomePage: React.FC = () => {
   const { user, loading } = useSupabaseAuth();
-  const { fetchDailyWords, progress, loading: dailyWordsLoading } = useLearning();
+  const { progress, loading: dailyWordsLoading } = useLearning();
   const [stats, setStats] = useState<LearningStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +54,7 @@ const HomePage: React.FC = () => {
     if (!loading) {
       fetchStats();
     }
-  }, [loading, fetchStats]);
+  }, [loading, fetchStats, user]);
   
   // 页面交互方法
   const handleStartLearning = () => {

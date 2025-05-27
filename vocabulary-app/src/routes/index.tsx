@@ -4,7 +4,6 @@ import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
 
 // 页面导入
 import HomePage from '../pages/HomePage';
-import SimpleHomePage from '../pages/SimpleHomePage';
 import WordlistPage from '../pages/WordlistPage';
 import ExamPage from '../pages/ExamPage';
 import ReadPage from '../pages/exercise/ReadPage';
