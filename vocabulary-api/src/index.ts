@@ -114,11 +114,22 @@ app.get('/debug', (req, res) => {
   });
 });
 
-// 添加API路由 - 注意：在Vercel中，路由已经包含/api前缀
-app.use('/api/auth', authRoutes);
-app.use('/api/words', wordRoutes);
-app.use('/api/exercises', exerciseRoutes);
-app.use('/api/supabase', supabaseRoutes);
+// 测试路由
+app.get('/test', (req, res) => {
+  res.json({
+    message: 'API is working!',
+    path: req.path,
+    method: req.method,
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// 添加API路由 - 在Vercel中，移除/api前缀，因为路由已经处理了
+app.use('/auth', authRoutes);
+app.use('/words', wordRoutes);
+app.use('/exercises', exerciseRoutes);
+app.use('/supabase', supabaseRoutes);
 
 // 处理未找到的路由
 app.all('*', (req, res, next) => {
