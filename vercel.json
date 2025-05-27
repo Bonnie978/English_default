@@ -3,6 +3,30 @@
   "buildCommand": "cd vocabulary-app && npm install && npm run build",
   "outputDirectory": "vocabulary-app/build",
   "installCommand": "cd vocabulary-api && npm install",
+  "functions": {
+    "vocabulary-api/api/index.ts": {
+      "maxDuration": 30
+    }
+  },
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization"
+        }
+      ]
+    }
+  ],
   "rewrites": [
     {
       "source": "/api/(.*)",

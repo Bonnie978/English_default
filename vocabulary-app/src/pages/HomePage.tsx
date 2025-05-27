@@ -48,8 +48,25 @@ const HomePage: React.FC = () => {
       console.error('HomePage: Error fetching stats:', error);
       
       if (error.response?.status === 401) {
-        // 如果是认证错误，显示友好提示
-        setError('请先登录以查看学习统计');
+        // 如果是认证错误，使用默认数据而不是显示错误
+        console.log('HomePage: Using default stats due to auth error');
+        setStats({
+          totalWordsLearned: 0,
+          masteredWords: 0,
+          streakDays: 0,
+          totalExercises: 0
+        });
+        setError(null); // 不显示错误信息
+      } else if (error.response?.status === 404) {
+        // API 路由不存在，使用默认数据
+        console.log('HomePage: API not found, using default stats');
+        setStats({
+          totalWordsLearned: 0,
+          masteredWords: 0,
+          streakDays: 0,
+          totalExercises: 0
+        });
+        setError(null);
       } else {
         setError(error.message || '获取统计数据失败，请稍后再试');
       }
