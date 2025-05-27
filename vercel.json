@@ -3,11 +3,6 @@
   "buildCommand": "cd vocabulary-app && npm install && npm run build",
   "outputDirectory": "vocabulary-app/build",
   "installCommand": "cd vocabulary-api && npm install",
-  "functions": {
-    "vocabulary-api/api/*.ts": {
-      "runtime": "@vercel/node"
-    }
-  },
   "rewrites": [
     {
       "source": "/api/(.*)",
