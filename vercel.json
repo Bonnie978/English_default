@@ -2,7 +2,7 @@
   "version": 2,
   "buildCommand": "cd vocabulary-app && npm run build",
   "outputDirectory": "vocabulary-app/build",
-  "installCommand": "npm install && cd vocabulary-app && npm install && cd ../vocabulary-api && npm install",
+  "installCommand": "cd vocabulary-app && npm install && cd ../vocabulary-api && npm install",
   "routes": [
     {
       "src": "/api/(.*)",
