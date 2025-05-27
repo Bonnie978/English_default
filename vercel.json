@@ -2,11 +2,8 @@
   "version": 2,
   "builds": [
     {
-      "src": "vocabulary-app/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "build"
-      }
+      "src": "vocabulary-app/build/**",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
@@ -19,31 +16,8 @@
       "dest": "/api/words/stats.js"
     },
     {
-      "src": "/static/(.*)",
-      "dest": "/vocabulary-app/build/static/$1"
-    },
-    {
-      "src": "/manifest.json",
-      "dest": "/vocabulary-app/build/manifest.json"
-    },
-    {
-      "src": "/favicon.ico",
-      "dest": "/vocabulary-app/build/favicon.ico"
-    },
-    {
-      "src": "/robots.txt",
-      "dest": "/vocabulary-app/build/robots.txt"
-    },
-    {
-      "src": "/logo(.*).png",
-      "dest": "/vocabulary-app/build/logo$1.png"
-    },
-    {
       "src": "/(.*)",
-      "dest": "/vocabulary-app/build/index.html"
+      "dest": "/vocabulary-app/build/$1"
     }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  }
+  ]
 } 
