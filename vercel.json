@@ -2,22 +2,21 @@
   "version": 2,
   "builds": [
     {
-      "src": "vocabulary-app/build/**",
-      "use": "@vercel/static"
+      "src": "vocabulary-app/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "build"
+      }
     }
   ],
   "routes": [
     {
-      "src": "/api/health",
-      "dest": "/api/health.js"
-    },
-    {
-      "src": "/api/words/stats",
-      "dest": "/api/words/stats.js"
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
     },
     {
       "src": "/(.*)",
-      "dest": "/vocabulary-app/build/$1"
+      "dest": "/vocabulary-app/build/index.html"
     }
   ]
 } 
