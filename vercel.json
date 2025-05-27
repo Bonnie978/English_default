@@ -1,18 +1,8 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "vocabulary-app/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "build"
-      }
-    },
-    {
-      "src": "vocabulary-api/api/index.ts",
-      "use": "@vercel/node"
-    }
-  ],
+  "buildCommand": "cd vocabulary-app && npm run build",
+  "outputDirectory": "vocabulary-app/build",
+  "installCommand": "npm install && cd vocabulary-app && npm install && cd ../vocabulary-api && npm install",
   "routes": [
     {
       "src": "/api/(.*)",
@@ -33,12 +23,6 @@
     {
       "src": "/(.*)",
       "dest": "/vocabulary-app/build/index.html"
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/vocabulary-api/api/index.ts"
     }
   ],
   "functions": {
