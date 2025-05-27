@@ -18,5 +18,11 @@
       "src": "/(.*)",
       "dest": "/vocabulary-app/build/index.html"
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/vocabulary-app/build/index.html"
+    }
   ]
 } 
