@@ -4,12 +4,6 @@
   "outputDirectory": "vocabulary-app/build",
   "installCommand": "cd vocabulary-api && npm install",
   "public": true,
-  "builds": [
-    {
-      "src": "vocabulary-api/api/index.ts",
-      "use": "@vercel/node"
-    }
-  ],
   "headers": [
     {
       "source": "/api/(.*)",
@@ -51,10 +45,10 @@
       ]
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "/vocabulary-api/api/index.ts"
+      "source": "/api/(.*)",
+      "destination": "/vocabulary-api/api/index.ts"
     }
   ]
 } 
