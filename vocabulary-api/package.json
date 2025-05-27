@@ -11,7 +11,8 @@
     "seed:words": "ts-node scripts/seedWords.ts",
     "test:supabase": "ts-node scripts/testSupabase.ts",
     "migrate:supabase": "ts-node scripts/migrateToSupabase.ts",
-    "create:admin": "node scripts/createAdminUser.js"
+    "create:admin": "node scripts/createAdminUser.js",
+    "vercel-build": "npm run build"
   },
   "keywords": [],
   "author": "",
@@ -37,6 +38,7 @@
     "@types/mongoose": "^5.11.97",
     "@types/node": "^20.11.16",
     "@types/winston": "^2.4.4",
+    "@vercel/node": "^3.0.0",
     "nodemon": "^3.0.3",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
