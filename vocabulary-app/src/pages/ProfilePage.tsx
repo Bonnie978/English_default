@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { useAuth } from '../hooks/useAuth';
+import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
 import HeaderBar from '../components/common/HeaderBar';
 import UserInfoCard from '../components/profile/UserInfoCard';
 import LearningStatsCard from '../components/profile/LearningStatsCard';
@@ -13,7 +13,7 @@ import Loading from '../components/common/Loading';
 import api from '../services/api';
 
 const ProfilePage: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, logout } = useSupabaseAuth();
   const [activeSection, setActiveSection] = useState<'stats' | 'settings'>('stats');
   const [userStats, setUserStats] = useState({
     totalWords: 480,
@@ -175,7 +175,7 @@ const ProfilePage: React.FC = () => {
         {/* 用户信息卡片 */}
         <UserInfoCard 
           user={{
-            username: user.username,
+            username: user.username || user.email || '用户',
             level: 8, // 这里可以根据学习数据计算等级
             joinDate: '2024年1月', // 使用默认值，实际应该从后端获取
             consecutiveDays: userStats.totalWords > 0 ? 32 : 0 // 这里应该从后端获取
@@ -235,18 +235,16 @@ const ProfilePage: React.FC = () => {
 
 // 样式组件
 const Container = styled.div`
+  min-height: 100vh;
+  background-color: #f8fafc;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  background-color: #f9fafb;
 `;
 
-const MainContent = styled.main`
+const MainContent = styled.div`
   flex: 1;
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 1.5rem 1rem;
-  width: 100%;
+  padding: 16px;
+  padding-bottom: 80px; /* 为底部导航栏留出空间 */
 `;
 
 const LoadingContainer = styled.div`
@@ -256,24 +254,56 @@ const LoadingContainer = styled.div`
   align-items: center;
 `;
 
+const TabsContainer = styled.div`
+  display: flex;
+  background-color: white;
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+`;
+
+const TabButton = styled.button<{ $active: boolean }>`
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  ${props => props.$active ? `
+    background-color: #3b82f6;
+    color: white;
+  ` : `
+    background-color: transparent;
+    color: #6b7280;
+    
+    &:hover {
+      background-color: #f3f4f6;
+    }
+  `}
+`;
+
+const StatsSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+`;
+
 const ActionButtons = styled.div`
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  gap: 8px;
 `;
 
 const SettingsButton = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 9999px;
-  background-color: #f3f4f6;
-  color: #6b7280;
+  padding: 8px;
   border: none;
+  background-color: #f3f4f6;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 16px;
   
   &:hover {
     background-color: #e5e7eb;
@@ -281,50 +311,18 @@ const SettingsButton = styled.button`
 `;
 
 const LogoutButton = styled.button`
+  padding: 8px 12px;
+  border: none;
   background-color: #ef4444;
   color: white;
-  font-size: 0.875rem;
-  font-weight: 500;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.375rem;
-  border: none;
+  border-radius: 8px;
   cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
   
   &:hover {
     background-color: #dc2626;
   }
 `;
-
-const TabsContainer = styled.div`
-  background-color: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-  margin-bottom: 1.5rem;
-  overflow: hidden;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  border: 1px solid #e5e7eb;
-`;
-
-const TabButton = styled.button<{ $active: boolean }>`
-  padding: 0.75rem;
-  text-align: center;
-  font-weight: 500;
-  cursor: pointer;
-  border: none;
-  background-color: ${props => props.$active ? '#3b82f6' : 'white'};
-  color: ${props => props.$active ? 'white' : '#374151'};
-  border-right: 1px solid #e5e7eb;
-  
-  &:last-child {
-    border-right: none;
-  }
-  
-  &:hover {
-    background-color: ${props => props.$active ? '#3b82f6' : '#f9fafb'};
-  }
-`;
-
-const StatsSection = styled.div``;
 
 export default ProfilePage; 

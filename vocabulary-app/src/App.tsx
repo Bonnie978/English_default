@@ -1,6 +1,6 @@
 import React from 'react';
 import { ThemeProvider } from 'styled-components';
-import { AuthProvider } from './contexts/AuthContext';
+import { SupabaseAuthProvider } from './contexts/SupabaseAuthContext';
 import { LearningProvider } from './contexts/LearningContext';
 import AppRouter from './routes';
 import { theme } from './styles/theme';
@@ -10,11 +10,11 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <GlobalStyles />
-      <AuthProvider>
+      <SupabaseAuthProvider>
         <LearningProvider>
           <AppRouter />
         </LearningProvider>
-      </AuthProvider>
+      </SupabaseAuthProvider>
     </ThemeProvider>
   );
 }

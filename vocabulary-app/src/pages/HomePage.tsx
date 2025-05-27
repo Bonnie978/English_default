@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { useAuth } from '../hooks/useAuth';
+import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
 import { useLearning } from '../hooks/useLearning';
 import api from '../services/api';
 import BottomNavbar from '../components/common/BottomNavbar';
@@ -16,7 +16,7 @@ interface LearningStats {
 }
 
 const HomePage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, loading } = useSupabaseAuth();
   const { fetchDailyWords, progress, loading: dailyWordsLoading } = useLearning();
   const [stats, setStats] = useState<LearningStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
@@ -28,24 +28,33 @@ const HomePage: React.FC = () => {
     try {
       setStatsLoading(true);
       setError(null);
+      console.log('HomePage: Fetching stats...');
       const response = await api.get('/words/stats');
       if (response.data.success) {
         setStats(response.data.stats);
+        console.log('HomePage: Stats fetched successfully');
       } else {
         throw new Error(response.data.message || '无法获取统计数据');
       }
     } catch (error: any) {
-      console.error('获取学习统计出错:', error);
-      setError(error.message || '获取统计数据失败，请稍后再试');
+      console.error('HomePage: Error fetching stats:', error);
+      // 如果是认证错误，显示友好提示
+      if (error.response?.status === 401) {
+        setError('请先登录以查看学习统计');
+      } else {
+        setError(error.message || '获取统计数据失败，请稍后再试');
+      }
     } finally {
       setStatsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchStats();
-    fetchDailyWords();
-  }, [fetchStats, fetchDailyWords]);
+    console.log('HomePage: useEffect triggered, user:', !!user, 'loading:', loading);
+    if (!loading) {
+      fetchStats();
+    }
+  }, [loading, fetchStats]);
   
   // 页面交互方法
   const handleStartLearning = () => {

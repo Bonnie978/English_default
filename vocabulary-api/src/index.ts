@@ -8,6 +8,7 @@ import { globalErrorHandler } from './utils/errorHandler';
 import authRoutes from './routes/auth.routes';
 import wordRoutes from './routes/word.routes';
 import exerciseRoutes from './routes/exercise.routes';
+import supabaseRoutes from './routes/supabase';
 
 // 初始化Express应用
 const app = express();
@@ -36,17 +37,28 @@ app.use(cors({
   }
 })();
 
-console.log('🚀 Server starting without database connection (using mock data)...');
+console.log('🚀 Server starting with Supabase integration...');
 
 // 路由
 app.get('/', (req, res) => {
-  res.json({ message: 'Welcome to Vocabulary App API' });
+  res.json({ message: 'Welcome to Vocabulary App API with Supabase' });
+});
+
+// 健康检查路由
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    service: 'vocabulary-api',
+    database: 'supabase'
+  });
 });
 
 // 添加API路由
 app.use('/api/auth', authRoutes);
 app.use('/api/words', wordRoutes);
 app.use('/api/exercises', exerciseRoutes);
+app.use('/api/supabase', supabaseRoutes);
 
 // 处理未找到的路由
 app.all('*', (req, res, next) => {

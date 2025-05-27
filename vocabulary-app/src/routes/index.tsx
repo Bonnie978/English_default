@@ -1,9 +1,10 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
+import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
 
 // 页面导入
 import HomePage from '../pages/HomePage';
+import SimpleHomePage from '../pages/SimpleHomePage';
 import WordlistPage from '../pages/WordlistPage';
 import ExamPage from '../pages/ExamPage';
 import ReadPage from '../pages/exercise/ReadPage';
@@ -15,25 +16,42 @@ import ProfilePage from '../pages/ProfilePage';
 import LoginPage from '../pages/auth/LoginPage';
 import RegisterPage from '../pages/auth/RegisterPage';
 import DebugPage from '../pages/DebugPage';
+import AuthDebugPage from '../pages/AuthDebugPage';
 
 // 需要认证的路由
 const PrivateRoute: React.FC<{ element: React.ReactElement }> = ({ element }) => {
-  const { user, loading } = useAuth();
+  const { user, loading } = useSupabaseAuth();
   
-  // 添加日志，观察 PrivateRoute 渲染时的状态
-  console.log('PrivateRoute rendering:', { loading, user: !!user }); // 只打印 user 是否存在，避免打印敏感信息
+  console.log('PrivateRoute rendering:', { 
+    loading, 
+    user: !!user, 
+    userEmail: user?.email,
+    timestamp: new Date().toISOString()
+  });
 
+  // 如果正在加载，显示加载状态
   if (loading) {
-    console.log('PrivateRoute: Showing loading state'); // 添加日志
-    return <div>加载中...</div>;
+    console.log('PrivateRoute: Loading state');
+    return React.createElement('div', { 
+      style: { 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh',
+        fontSize: '18px',
+        color: '#6b7280'
+      } 
+    }, '加载中...');
   }
   
+  // 如果没有用户，重定向到登录页
   if (!user) {
-    console.log('PrivateRoute: User not found, navigating to /login'); // 添加日志
-    return <Navigate to="/login" />;
+    console.log('PrivateRoute: No user, redirecting to login');
+    return React.createElement(Navigate, { to: '/login', replace: true });
   }
   
-  console.log('PrivateRoute: User found, rendering element'); // 添加日志
+  // 有用户，渲染目标组件
+  console.log('PrivateRoute: User found, rendering element');
   return element; 
 };
 
@@ -44,6 +62,7 @@ const AppRouter: React.FC = () => {
         {/* 公共路由 */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/auth-debug" element={<AuthDebugPage />} />
         
         {/* 受保护的路由 */}
         <Route path="/" element={<PrivateRoute element={<HomePage />} />} />

@@ -8,12 +8,16 @@
     "dev": "nodemon --ignore node_modules --ignore dist --ignore logs --ignore app.log --exec ts-node src/index.ts",
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "seed:words": "ts-node scripts/seedWords.ts"
+    "seed:words": "ts-node scripts/seedWords.ts",
+    "test:supabase": "ts-node scripts/testSupabase.ts",
+    "migrate:supabase": "ts-node scripts/migrateToSupabase.ts",
+    "create:admin": "node scripts/createAdminUser.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@supabase/supabase-js": "^2.49.8",
     "axios": "^1.8.4",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",

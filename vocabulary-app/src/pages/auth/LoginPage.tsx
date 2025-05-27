@@ -1,26 +1,51 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
+import { useSupabaseAuth } from '../../contexts/SupabaseAuthContext';
 import styled from 'styled-components';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login, error, loading } = useAuth();
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const { login, error, loading, user } = useSupabaseAuth();
   const navigate = useNavigate();
+
+  // 如果用户已经登录，直接跳转到首页
+  useEffect(() => {
+    if (user && !loading) {
+      console.log('LoginPage: User already logged in, redirecting to home');
+      navigate('/', { replace: true });
+    }
+  }, [user, loading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     console.log('LoginPage: handleSubmit triggered');
     e.preventDefault();
     
+    // 防止重复提交
+    if (isLoggingIn) {
+      console.log('LoginPage: Already logging in, ignoring submit');
+      return;
+    }
+    
     console.log('LoginPage: Attempting login with:', { email, password });
+    setIsLoggingIn(true);
     
     try {
-      await login(email, password);
-      console.log('LoginPage: login function called successfully, navigating to /');
-      navigate('/');
+      const result = await login(email, password);
+      console.log('LoginPage: login result:', result);
+      
+      if (result.success) {
+        console.log('LoginPage: login successful, navigating');
+        // 登录成功后直接跳转
+        navigate('/', { replace: true });
+      } else {
+        console.log('LoginPage: login failed:', result.error);
+      }
     } catch (error) {
       console.error('LoginPage: Error during login call:', error);
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -39,6 +64,7 @@ const LoginPage: React.FC = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              disabled={isLoggingIn}
             />
           </FormGroup>
           <FormGroup>
@@ -49,13 +75,20 @@ const LoginPage: React.FC = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              disabled={isLoggingIn}
             />
           </FormGroup>
-          <Button type="submit" disabled={loading}>
-            {loading ? '登录中...' : '登录'}
+          <Button type="submit" disabled={loading || isLoggingIn}>
+            {isLoggingIn ? '登录中...' : loading ? '加载中...' : '登录'}
           </Button>
         </form>
-        <RegisterLink onClick={() => navigate('/register')}>
+        <RegisterLink 
+          onClick={() => !isLoggingIn && navigate('/register')}
+          style={{ 
+            opacity: isLoggingIn ? 0.5 : 1,
+            pointerEvents: isLoggingIn ? 'none' : 'auto'
+          }}
+        >
           还没有账号？注册一个
         </RegisterLink>
       </FormCard>
