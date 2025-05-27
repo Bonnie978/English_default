@@ -4,14 +4,6 @@
   "outputDirectory": "vocabulary-app/build",
   "installCommand": "cd vocabulary-api && npm install",
   "public": true,
-  "functions": {
-    "vocabulary-api/api/index.ts": {
-      "maxDuration": 30
-    },
-    "vocabulary-api/api/test.ts": {
-      "maxDuration": 10
-    }
-  },
   "headers": [
     {
       "source": "/api/(.*)",
