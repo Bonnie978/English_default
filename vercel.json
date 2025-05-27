@@ -31,8 +31,12 @@
       "dest": "/vocabulary-app/build/favicon.ico"
     },
     {
-      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|ico|svg|json))",
-      "dest": "/vocabulary-app/build/$1"
+      "src": "/robots.txt",
+      "dest": "/vocabulary-app/build/robots.txt"
+    },
+    {
+      "src": "/logo(.*).png",
+      "dest": "/vocabulary-app/build/logo$1.png"
     },
     {
       "src": "/(.*)",
