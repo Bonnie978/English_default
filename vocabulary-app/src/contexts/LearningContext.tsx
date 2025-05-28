@@ -46,7 +46,7 @@ export const LearningProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setLoading(true);
       setError(null);
       
-      const response = await api.get('/api/words/daily');
+      const response = await api.get('/api/words-daily');
       
       if (response.data.success) {
         setDailyWords(response.data.words);
