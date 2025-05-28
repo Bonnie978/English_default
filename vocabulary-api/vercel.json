@@ -1,13 +1,16 @@
 {
   "version": 2,
   "installCommand": "npm install",
-  "buildCommand": "",
+  "buildCommand": "npm run build",
   "functions": {
+    "api/simple.ts": {
+      "maxDuration": 10
+    },
+    "api/test-supabase.ts": {
+      "maxDuration": 15
+    },
     "api/index.ts": {
       "maxDuration": 30
-    },
-    "api/test.ts": {
-      "maxDuration": 10
     }
   },
   "headers": [
@@ -31,8 +34,12 @@
   ],
   "rewrites": [
     {
-      "source": "/api/test",
-      "destination": "/api/test.ts"
+      "source": "/api/simple",
+      "destination": "/api/simple.ts"
+    },
+    {
+      "source": "/api/test-supabase",
+      "destination": "/api/test-supabase.ts"
     },
     {
       "source": "/api/(.*)",

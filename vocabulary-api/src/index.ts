@@ -23,7 +23,10 @@ const allowedOrigins = [
   'https://eapp-6a4uzh7dh-magics-projects-d2e379e7.vercel.app',
   'https://eapp-p2g6ndmln-magics-projects-d2e379e7.vercel.app',
   'https://eapp-b4yeapx37-magics-projects-d2e379e7.vercel.app',
-  'https://english-default-qp9gio8q6-magics-projects-d2e379e7.vercel.app'
+  'https://english-default-qp9gio8q6-magics-projects-d2e379e7.vercel.app',
+  'https://english-default-95j655ku2-magics-projects-d2e379e7.vercel.app',
+  'https://english-default-91mdqifax-magics-projects-d2e379e7.vercel.app',
+  'https://english-default-dl8jb1n5u-magics-projects-d2e379e7.vercel.app'
 ];
 
 app.use(cors({
