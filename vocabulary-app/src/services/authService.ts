@@ -1,5 +1,6 @@
 import { supabase } from '../config/supabase'
 import type { AuthUser } from '../config/supabase'
+import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 
 export interface SignUpData {
   email: string
@@ -121,7 +122,7 @@ class AuthService {
 
   // 监听认证状态变化
   onAuthStateChange(callback: (user: AuthUser | null) => void) {
-    return supabase.auth.onAuthStateChange((event, session) => {
+    return supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
       callback(session?.user as AuthUser || null)
     })
   }
