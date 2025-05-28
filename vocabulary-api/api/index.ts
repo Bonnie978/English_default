@@ -15,6 +15,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return;
     }
 
+    // 如果是根路径，返回API信息
+    if (req.url === '/' || req.url === '') {
+      return res.status(200).json({
+        message: 'Vocabulary Learning API',
+        version: '1.0.0',
+        status: 'running',
+        endpoints: {
+          auth: '/api/auth/*',
+          words: '/api/words/*',
+          exercises: '/api/exercises/*',
+          test: '/api/simple',
+          supabase: '/api/test-supabase'
+        },
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'production'
+      });
+    }
+
     // 确保URL正确格式化
     if (req.url && !req.url.startsWith('/api')) {
       req.url = '/api' + req.url;
@@ -41,4 +59,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       message: error instanceof Error ? error.message : 'Unknown error'
     });
   }
+}
+
+export function rootHandler(req: VercelRequest, res: VercelResponse) {
+  // 设置CORS头
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  // 根路径返回API信息
+  return res.status(200).json({
+    message: 'Vocabulary Learning API',
+    version: '1.0.0',
+    status: 'running',
+    endpoints: {
+      auth: '/api/auth/*',
+      words: '/api/words/*',
+      exercises: '/api/exercises/*',
+      test: '/api/simple',
+      supabase: '/api/test-supabase'
+    },
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'production'
+  });
 } 
