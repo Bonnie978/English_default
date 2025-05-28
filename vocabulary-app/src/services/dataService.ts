@@ -269,13 +269,13 @@ class DataService {
       }
 
       const totalWords = progressData?.length || 0
-      const masteredWords = progressData?.filter(p => p.mastery_level >= 80).length || 0
+      const masteredWords = progressData?.filter((p: any) => p.mastery_level >= 80).length || 0
       const totalSessions = sessionData?.length || 0
       
       let averageAccuracy = 0
       if (sessionData && sessionData.length > 0) {
-        const totalCorrect = sessionData.reduce((sum, session) => sum + session.correct_answers, 0)
-        const totalQuestions = sessionData.reduce((sum, session) => sum + session.total_questions, 0)
+        const totalCorrect = sessionData.reduce((sum: number, session: any) => sum + session.correct_answers, 0)
+        const totalQuestions = sessionData.reduce((sum: number, session: any) => sum + session.total_questions, 0)
         averageAccuracy = totalQuestions > 0 ? (totalCorrect / totalQuestions) * 100 : 0
       }
 
