@@ -46,7 +46,7 @@ const ProfilePage: React.FC = () => {
         setLoading(true);
         
         // 获取学习统计
-        const statsResponse = await api.get('/api/words-stats');
+        const statsResponse = await api.get('/api/words-stats-simple');
         if (statsResponse.data.success) {
           setUserStats({
             totalWords: statsResponse.data.stats.totalWords || 480,
