@@ -40,8 +40,8 @@ export const register = async (req: Request, res: Response) => {
     const { data: newUser, error } = await supabase
       .from('users')
       .insert([{
-        username,
-        email,
+      username,
+      email,
         password_hash: passwordHash
       }])
       .select()

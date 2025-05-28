@@ -30,7 +30,7 @@ export const getWords = async (req: Request, res: Response) => {
         message: '获取单词列表失败'
       });
     }
-
+    
     res.status(200).json({
       success: true,
       words: words || [],
@@ -43,12 +43,12 @@ export const getWords = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('获取单词列表错误:', error);
     res.status(500).json({
-      success: false,
+          success: false,
       message: '服务器错误，请稍后再试'
-    });
-  }
+        });
+      }
 };
-
+      
 // 获取用户学习记录
 export const getUserLearningRecord = async (req: Request, res: Response) => {
   try {
@@ -66,9 +66,9 @@ export const getUserLearningRecord = async (req: Request, res: Response) => {
         message: '获取学习记录失败'
       });
     }
-
-    res.status(200).json({
-      success: true,
+      
+      res.status(200).json({
+        success: true,
       learningRecord: records || []
     });
   } catch (error) {
@@ -126,16 +126,16 @@ export const updateWordMastery = async (req: Request, res: Response) => {
           review_count: 1,
           correct_count: mastered ? 1 : 0
         }]);
-
+    
       if (error) {
         console.error('创建学习记录错误:', error);
         return res.status(500).json({
-          success: false,
+        success: false,
           message: '创建学习记录失败'
-        });
-      }
+      });
     }
-
+    }
+    
     res.status(200).json({
       success: true,
       message: '单词掌握状态更新成功'
@@ -158,7 +158,7 @@ export const getLearningStats = async (req: Request, res: Response) => {
       .from('learning_records')
       .select('*')
       .eq('user_id', userId);
-
+    
     if (error) {
       console.error('获取学习统计错误:', error);
       return res.status(500).json({
@@ -166,12 +166,12 @@ export const getLearningStats = async (req: Request, res: Response) => {
         message: '获取学习统计失败'
       });
     }
-
+    
     const totalWords = records?.length || 0;
     const masteredWords = records?.filter(r => r.mastery_level >= 4).length || 0;
     const reviewingWords = records?.filter(r => r.mastery_level >= 2 && r.mastery_level < 4).length || 0;
     const learningWords = records?.filter(r => r.mastery_level < 2).length || 0;
-
+    
     res.status(200).json({
       success: true,
       stats: {
