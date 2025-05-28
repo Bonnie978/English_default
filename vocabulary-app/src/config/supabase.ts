@@ -28,12 +28,12 @@ let supabase: any = null
 if (isValidUrl(supabaseUrl) && supabaseAnonKey && supabaseAnonKey.length > 10) {
   // 创建真实的 Supabase 客户端
   supabase = createClient(finalSupabaseUrl, finalSupabaseKey, {
-    auth: {
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: true
-    }
-  })
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
+  }
+})
   console.log('✅ Supabase client initialized with real configuration')
 } else {
   // 创建模拟客户端用于开发

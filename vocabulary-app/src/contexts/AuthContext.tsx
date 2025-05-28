@@ -52,7 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // 获取当前用户信息
           const response = await api.get('/api/auth/me');
           if (response.data.success) {
-            setUser(response.data.user);
+          setUser(response.data.user);
           } else {
             throw new Error(response.data.message || '获取用户信息失败');
           }
@@ -84,7 +84,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // 获取用户信息
         const userResponse = await api.get('/api/auth/me');
         if (userResponse.data.success) {
-          setUser(userResponse.data.user);
+        setUser(userResponse.data.user);
         }
       } else {
         throw new Error(response.data.message || '登录失败');
@@ -112,7 +112,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // 获取用户信息
         const userResponse = await api.get('/api/auth/me');
         if (userResponse.data.success) {
-          setUser(userResponse.data.user);
+        setUser(userResponse.data.user);
         }
       }
     } catch (err: any) {
