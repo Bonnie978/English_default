@@ -4,14 +4,14 @@ import { authenticate } from '../middleware/auth.middleware';
 
 const router = Router();
 
-// 获取学习统计信息 - 临时不需要认证，用于测试
-router.get('/stats', getLearningStats);
-
 // 获取单词列表 - 不需要认证
 router.get('/', getWords);
 
-// 其他路由需要身份验证
+// 需要身份验证的路由
 router.use(authenticate);
+
+// 获取学习统计信息
+router.get('/stats', getLearningStats);
 
 // 获取用户学习记录
 router.get('/learning-record', getUserLearningRecord);
