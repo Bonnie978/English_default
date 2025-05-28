@@ -1,8 +1,9 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import mongoose from 'mongoose';
-import { User, IUser } from '../models/User';
+import bcrypt from 'bcrypt';
+import { supabase } from '../config/supabase';
 import { config } from '../config/env';
+import { User } from '../types/supabase';
 
 // 注册新用户
 export const register = async (req: Request, res: Response) => {
@@ -18,9 +19,11 @@ export const register = async (req: Request, res: Response) => {
     }
     
     // 检查用户是否已存在
-    const existingUser = await User.findOne({ 
-      $or: [{ email }, { username }] 
-    });
+    const { data: existingUser } = await supabase
+      .from('users')
+      .select('id')
+      .or(`email.eq.${email},username.eq.${username}`)
+      .single();
     
     if (existingUser) {
       return res.status(400).json({
@@ -29,26 +32,40 @@ export const register = async (req: Request, res: Response) => {
       });
     }
     
-    // 创建新用户
-    const newUser = new User({
-      username,
-      email,
-      passwordHash: password // 中间件会自动加密
-    });
+    // 加密密码
+    const saltRounds = 12;
+    const passwordHash = await bcrypt.hash(password, saltRounds);
     
-    await newUser.save();
+    // 创建新用户
+    const { data: newUser, error } = await supabase
+      .from('users')
+      .insert([{
+        username,
+        email,
+        password_hash: passwordHash
+      }])
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('创建用户错误:', error);
+      return res.status(500).json({
+        success: false,
+        message: '创建用户失败'
+      });
+    }
     
     // 生成JWT令牌
     const token = jwt.sign(
-      { userId: (newUser._id as mongoose.Types.ObjectId).toString() },
-      Buffer.from(config.JWT_SECRET),
+      { userId: newUser.id },
+      config.JWT_SECRET,
       { expiresIn: '7d' }
     );
     
     res.status(201).json({
       success: true,
       message: '注册成功',
-      userId: newUser._id,
+      userId: newUser.id,
       token
     });
   } catch (error) {
@@ -74,9 +91,13 @@ export const login = async (req: Request, res: Response) => {
     }
     
     // 查找用户
-    const user = await User.findOne({ email });
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('id, username, email, password_hash')
+      .eq('email', email)
+      .single();
     
-    if (!user) {
+    if (error || !user) {
       return res.status(401).json({
         success: false,
         message: '邮箱或密码不正确'
@@ -84,7 +105,7 @@ export const login = async (req: Request, res: Response) => {
     }
     
     // 验证密码
-    const isPasswordValid = await user.comparePassword(password);
+    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
     
     if (!isPasswordValid) {
       return res.status(401).json({
@@ -94,20 +115,22 @@ export const login = async (req: Request, res: Response) => {
     }
     
     // 更新最后登录时间
-    user.lastLoginAt = new Date();
-    await user.save();
+    await supabase
+      .from('users')
+      .update({ last_login_at: new Date().toISOString() })
+      .eq('id', user.id);
     
     // 生成JWT令牌
     const token = jwt.sign(
-      { userId: (user._id as mongoose.Types.ObjectId).toString() },
-      Buffer.from(config.JWT_SECRET),
+      { userId: user.id },
+      config.JWT_SECRET,
       { expiresIn: '7d' }
     );
     
     res.status(200).json({
       success: true,
       message: '登录成功',
-      userId: user._id,
+      userId: user.id,
       username: user.username,
       token
     });
@@ -124,10 +147,15 @@ export const login = async (req: Request, res: Response) => {
 export const getCurrentUser = async (req: Request, res: Response) => {
   try {
     // 从数据库查询完整用户信息
-    const userId = req.user._id;
-    const userFromDb = await User.findById(userId);
+    const userId = req.user.id;
     
-    if (!userFromDb) {
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('id, username, email, created_at, updated_at, is_admin, avatar_url, preferences')
+      .eq('id', userId)
+      .single();
+    
+    if (error || !user) {
       return res.status(404).json({
         success: false,
         message: '用户未找到'
@@ -137,12 +165,13 @@ export const getCurrentUser = async (req: Request, res: Response) => {
     res.status(200).json({
       success: true,
       user: {
-        _id: userFromDb._id,
-        username: userFromDb.username,
-        email: userFromDb.email,
-        learningStats: userFromDb.learningStats,
-        settings: userFromDb.settings,
-        createdAt: userFromDb.createdAt
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        isAdmin: user.is_admin,
+        avatarUrl: user.avatar_url,
+        preferences: user.preferences,
+        createdAt: user.created_at
       }
     });
   } catch (error) {

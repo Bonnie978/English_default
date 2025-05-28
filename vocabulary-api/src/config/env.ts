@@ -8,8 +8,12 @@ export const config = {
   PORT: process.env.PORT || 3001,  // 后端在3001端口
   NODE_ENV: process.env.NODE_ENV || 'development',
   
-  // 数据库配置
-  MONGODB_URI: process.env.MONGODB_URI || 'mongodb://localhost:27017/vocabulary-app',
+  // Supabase配置
+  SUPABASE_URL: process.env.SUPABASE_URL || '',
+  SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY || '',
+  SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+  
+  // Redis配置（可选）
   REDIS_URL: process.env.REDIS_URL || 'redis://localhost:6379',
   
   // JWT配置

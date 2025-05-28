@@ -1,24 +1,28 @@
 import { createClient } from '@supabase/supabase-js'
+import { config } from './env'
 import dotenv from 'dotenv'
 
 // 加载环境变量
 dotenv.config()
 
 // Supabase 配置
-const supabaseUrl = process.env.SUPABASE_URL || ''
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+const supabaseUrl = config.SUPABASE_URL || ''
+const supabaseKey = config.SUPABASE_ANON_KEY || ''
 
-if (!supabaseUrl || !supabaseServiceKey) {
+if (!supabaseUrl || !supabaseKey) {
   throw new Error('Missing Supabase environment variables')
 }
 
 // 创建 Supabase 客户端（使用服务端密钥，拥有完整权限）
-export const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
-  }
-})
+export const supabase = createClient(supabaseUrl, supabaseKey)
+
+// 用于服务端操作的客户端（使用service_role key）
+export const supabaseAdmin = createClient(
+  supabaseUrl,
+  config.SUPABASE_SERVICE_ROLE_KEY || supabaseKey
+)
+
+export default supabase
 
 // 数据库表名常量
 export const TABLES = {

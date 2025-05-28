@@ -5,7 +5,7 @@ declare global {
   namespace Express {
     interface Request {
       user: {
-        _id: Types.ObjectId;
+        id: string;
         email: string;
         username: string;
         role: string;
@@ -23,7 +23,7 @@ export interface ReadingExerciseResult {
     type: string;
     options: string[];
     correctAnswer: string;
-    _id?: string | Types.ObjectId;
+    id?: string;
   }[];
 }
 
@@ -38,7 +38,7 @@ export type ExerciseResult = ReadingExerciseResult | WritingExerciseResult;
 
 // 学习记录的练习类型
 export interface IExerciseQuestion {
-  _id: Types.ObjectId;
+  id: string;
   question: string;
   options?: string[];
   type: 'multiple-choice' | 'fill-blank' | 'writing';
@@ -48,7 +48,7 @@ export interface IExerciseQuestion {
 }
 
 export interface IExercise {
-  _id: Types.ObjectId;
+  id: string;
   type: 'read' | 'listen' | 'write';
   content: string;
   questions: IExerciseQuestion[];
@@ -60,7 +60,7 @@ export interface IExercise {
 
 // 响应类型
 export interface ExerciseResponseBase {
-  id: any;
+  id: string;
   type: string;
   content: any;
 }

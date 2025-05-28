@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import { config } from './config/env';
-import { connectMongoDB } from './config/database';
 import { connectRedis } from './config/redis';
 import logger from './config/logger';
 import { globalErrorHandler } from './utils/errorHandler';
@@ -23,7 +22,8 @@ const allowedOrigins = [
   'https://eapp-delta.vercel.app',
   'https://eapp-6a4uzh7dh-magics-projects-d2e379e7.vercel.app',
   'https://eapp-p2g6ndmln-magics-projects-d2e379e7.vercel.app',
-  'https://eapp-b4yeapx37-magics-projects-d2e379e7.vercel.app'
+  'https://eapp-b4yeapx37-magics-projects-d2e379e7.vercel.app',
+  'https://english-default-qp9gio8q6-magics-projects-d2e379e7.vercel.app'
 ];
 
 app.use(cors({
@@ -44,36 +44,27 @@ app.use(cors({
   optionsSuccessStatus: 200
 }));
 
-// 数据库连接（简化版）
-let dbConnected = false;
-const initializeDatabase = async () => {
-  if (!dbConnected) {
+// 数据库连接（简化版 - 只使用Supabase）
+let redisConnected = false;
+const initializeServices = async () => {
+  if (!redisConnected && process.env.NODE_ENV !== 'production') {
     try {
-      // 在serverless环境中，只连接MongoDB，跳过Redis
-      if (process.env.NODE_ENV === 'production') {
-        await connectMongoDB();
-        console.log('🔌 MongoDB connected (production)');
-      } else {
-        await connectMongoDB();
-        await connectRedis();
-        console.log('🔌 Database connected (development)');
-      }
-      dbConnected = true;
+      // 只在开发环境连接Redis（可选）
+      await connectRedis();
+      console.log('🔌 Redis connected (development)');
+      redisConnected = true;
     } catch (error) {
-      console.error('Database connection failed:', error);
-      // 在serverless环境中，不要退出进程
-      if (process.env.NODE_ENV !== 'production') {
-        process.exit(1);
-      }
+      console.warn('Redis connection failed (optional):', error);
+      // Redis连接失败不影响应用运行
     }
   }
 };
 
-// 在每个请求前确保数据库连接（仅在需要时）
+// 在需要时初始化服务
 app.use(async (req, res, next) => {
-  // 只对API路由初始化数据库
-  if (req.path.startsWith('/api/auth') || req.path.startsWith('/api/words') || req.path.startsWith('/api/exercises') || req.path.startsWith('/api/supabase')) {
-    await initializeDatabase();
+  // 只在开发环境初始化Redis
+  if (process.env.NODE_ENV !== 'production') {
+    await initializeServices();
   }
   next();
 });
@@ -98,8 +89,7 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     service: 'vocabulary-api',
     database: 'supabase',
-    environment: process.env.NODE_ENV || 'development',
-    dbConnected: dbConnected
+    environment: process.env.NODE_ENV || 'development'
   });
 });
 
