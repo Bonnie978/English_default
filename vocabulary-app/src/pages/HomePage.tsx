@@ -37,7 +37,7 @@ const HomePage: React.FC = () => {
       setStatsLoading(true);
       setError(null);
       console.log('HomePage: Fetching stats...');
-      const response = await api.get('/api/simple?type=stats');
+      const response = await api.get('/api/words-stats');
       if (response.data.success) {
         setStats(response.data.stats);
         console.log('HomePage: Stats fetched successfully');

@@ -9,15 +9,6 @@
     "api/test-supabase.ts": {
       "maxDuration": 15
     },
-    "api/words-stats-basic.ts": {
-      "maxDuration": 15
-    },
-    "api/words-daily.js": {
-      "maxDuration": 15
-    },
-    "api/words-stats.js": {
-      "maxDuration": 15
-    },
     "api/index.ts": {
       "maxDuration": 30
     }
@@ -51,16 +42,8 @@
       "destination": "/api/test-supabase.ts"
     },
     {
-      "source": "/api/words-stats-basic",
-      "destination": "/api/words-stats-basic.ts"
-    },
-    {
-      "source": "/api/words-daily",
-      "destination": "/api/words-daily.js"
-    },
-    {
-      "source": "/api/words-stats",
-      "destination": "/api/words-stats.js"
+      "source": "/api/(.*)",
+      "destination": "/api/index.ts"
     }
   ]
 } 
