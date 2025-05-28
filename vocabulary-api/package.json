@@ -1,7 +1,7 @@
 {
   "name": "vocabulary-api",
-  "version": "1.0.0",
-  "description": "Vocabulary learning application backend API - Updated 2024-12-19",
+  "version": "1.0.715027",
+  "description": "Vocabulary learning application backend API - Force Deploy 2025-05-28T08:25:14.979Z",
   "main": "dist/index.js",
   "scripts": {
     "start": "node dist/index.js",

@@ -1,7 +1,7 @@
 {
   "name": "vocabulary-app",
-  "version": "0.1.0",
-  "description": "Vocabulary learning application frontend - Updated 2024-12-19",
+  "version": "0.1.715026",
+  "description": "Vocabulary learning application frontend - Force Deploy 2025-05-28T08:25:14.979Z",
   "private": true,
   "dependencies": {
     "@supabase/supabase-js": "^2.49.8",
