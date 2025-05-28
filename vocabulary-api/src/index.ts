@@ -26,7 +26,8 @@ const allowedOrigins = [
   'https://english-default-qp9gio8q6-magics-projects-d2e379e7.vercel.app',
   'https://english-default-95j655ku2-magics-projects-d2e379e7.vercel.app',
   'https://english-default-91mdqifax-magics-projects-d2e379e7.vercel.app',
-  'https://english-default-dl8jb1n5u-magics-projects-d2e379e7.vercel.app'
+  'https://english-default-dl8jb1n5u-magics-projects-d2e379e7.vercel.app',
+  'https://english-default-fr.vercel.app'
 ];
 
 app.use(cors({
@@ -53,7 +54,7 @@ const initializeServices = async () => {
   if (!redisConnected && process.env.NODE_ENV !== 'production') {
     try {
       // 只在开发环境连接Redis（可选）
-      await connectRedis();
+        await connectRedis();
       console.log('🔌 Redis connected (development)');
       redisConnected = true;
     } catch (error) {
