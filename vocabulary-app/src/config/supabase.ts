@@ -1,21 +1,61 @@
 import { createClient } from '@supabase/supabase-js'
 
 // Supabase 配置
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || ''
-const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY || ''
+const supabaseUrl = process.env.REACT_APP_SUPABASE_URL
+const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables')
+// 检查环境变量是否存在且有效
+const isValidUrl = (url: string | undefined): boolean => {
+  if (!url) return false
+  try {
+    new URL(url)
+    return true
+  } catch {
+    return false
+  }
 }
 
-// 创建 Supabase 客户端
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true
+// 如果没有配置 Supabase 环境变量，使用默认配置（仅用于开发）
+const defaultSupabaseUrl = 'https://placeholder.supabase.co'
+const defaultSupabaseKey = 'placeholder-key'
+
+const finalSupabaseUrl = isValidUrl(supabaseUrl) ? supabaseUrl! : defaultSupabaseUrl
+const finalSupabaseKey = supabaseAnonKey && supabaseAnonKey.length > 10 ? supabaseAnonKey : defaultSupabaseKey
+
+// 只在使用真实配置时创建客户端
+let supabase: any = null
+
+if (isValidUrl(supabaseUrl) && supabaseAnonKey && supabaseAnonKey.length > 10) {
+  // 创建真实的 Supabase 客户端
+  supabase = createClient(finalSupabaseUrl, finalSupabaseKey, {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true
+    }
+  })
+  console.log('✅ Supabase client initialized with real configuration')
+} else {
+  // 创建模拟客户端用于开发
+  console.warn('⚠️ Supabase environment variables not configured, using mock client')
+  supabase = {
+    auth: {
+      getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+      signUp: () => Promise.resolve({ data: null, error: { message: 'Supabase not configured' } }),
+      signInWithPassword: () => Promise.resolve({ data: null, error: { message: 'Supabase not configured' } }),
+      signOut: () => Promise.resolve({ error: null }),
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } })
+    },
+    from: () => ({
+      select: () => Promise.resolve({ data: [], error: null }),
+      insert: () => Promise.resolve({ data: null, error: { message: 'Supabase not configured' } }),
+      update: () => Promise.resolve({ data: null, error: { message: 'Supabase not configured' } }),
+      delete: () => Promise.resolve({ data: null, error: { message: 'Supabase not configured' } })
+    })
   }
-})
+}
+
+export { supabase }
 
 // 数据库表名常量
 export const TABLES = {
