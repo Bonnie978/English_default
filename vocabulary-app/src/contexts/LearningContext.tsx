@@ -46,7 +46,7 @@ export const LearningProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setLoading(true);
       setError(null);
       
-      const response = await api.get('/words/daily');
+      const response = await api.get('/api/words/daily');
       
       if (response.data.success) {
         setDailyWords(response.data.words);
@@ -68,16 +68,10 @@ export const LearningProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, []); // 空依赖数组，因为 fetchDailyWords 不依赖于 Provider 内部的其他 state 或 props
 
-  // 标记单词为已掌握/未掌握 - 也应该用 useCallback 包装
+  // 标记单词为已掌握 - 使用 useCallback 包装
   const markWordAsMastered = useCallback(async (wordId: string) => {
-    // Check if word is currently in the local mastered list
-    const isLocallyMastered = masteredWordIds.includes(wordId);
-    
     try {
-      setError(null);
-      
-      // Call the API
-      const response = await api.post(`/words/${wordId}/mastered`);
+      const response = await api.post(`/api/words/${wordId}/mastered`);
       
       // IMPORTANT: Re-sync local state with the actual server response
       // This corrects the optimistic update if the API call failed
@@ -85,21 +79,17 @@ export const LearningProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (response.data.success) {
         const serverMastered = response.data.mastered;
         
-        if (serverMastered && !isLocallyMastered) {
+        if (serverMastered) {
           // Server says mastered, local was not -> Add to local
           setMasteredWordIds(prev => [...prev, wordId]);
           setProgress(prev => ({ ...prev, learned: prev.learned + 1 }));
-        } else if (!serverMastered && isLocallyMastered) {
+        } else {
           // Server says not mastered, local was -> Remove from local
           setMasteredWordIds(prev => prev.filter(id => id !== wordId));
           setProgress(prev => ({ 
             ...prev, 
             learned: Math.max(0, prev.learned - 1) 
           }));
-        } else {
-          // Local state already matched server state, or an unexpected case.
-          // May need to refresh progress count based on server if needed.
-          // Example: fetch updated progress if counts don't match?
         }
       } else {
           // API call failed (but didn't throw an error? unlikely with axios defaults)
@@ -122,7 +112,7 @@ export const LearningProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       throw err; // Re-throw error so the calling component knows it failed
     }
-  }, [masteredWordIds]);
+  }, []);
 
   return (
     <LearningContext.Provider

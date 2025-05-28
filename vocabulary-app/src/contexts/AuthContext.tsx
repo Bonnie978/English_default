@@ -50,11 +50,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (token) {
         try {
           // 获取当前用户信息
-          const response = await api.get('/auth/me');
-          setUser(response.data.user);
-        } catch (err) {
-          // 如果token无效，清除本地存储
+          const response = await api.get('/api/auth/me');
+          if (response.data.success) {
+            setUser(response.data.user);
+          } else {
+            throw new Error(response.data.message || '获取用户信息失败');
+          }
+        } catch (error: any) {
+          console.error('获取用户信息失败:', error);
           localStorage.removeItem('token');
+          setUser(null);
+          throw error;
         }
       }
       
@@ -67,25 +73,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // 登录方法
   const login = async (email: string, password: string) => {
     try {
-      setError(null);
       setLoading(true);
+      setError(null);
       
-      const response = await api.post('/auth/login', { email, password });
+      const response = await api.post('/api/auth/login', { email, password });
       
       if (response.data.success) {
-        const { token } = response.data;
-        
-        // 保存token到本地存储
-        localStorage.setItem('token', token);
+        localStorage.setItem('token', response.data.token);
         
         // 获取用户信息
-        const userResponse = await api.get('/auth/me');
-        setUser(userResponse.data.user);
-        console.log('AuthContext: User state updated after login:', userResponse.data.user);
+        const userResponse = await api.get('/api/auth/me');
+        if (userResponse.data.success) {
+          setUser(userResponse.data.user);
+        }
+      } else {
+        throw new Error(response.data.message || '登录失败');
       }
-    } catch (err: any) {
-      console.error('Login error:', err.response?.data || err.message);
-      setError(err.response?.data?.message || '登录失败，请重试');
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.message || '登录失败，请重试';
+      setError(errorMessage);
+      throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -94,20 +101,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // 注册方法
   const register = async (username: string, email: string, password: string) => {
     try {
-      setError(null);
       setLoading(true);
+      setError(null);
       
-      const response = await api.post('/auth/register', { username, email, password });
+      const response = await api.post('/api/auth/register', { username, email, password });
       
       if (response.data.success) {
-        const { token } = response.data;
-        
-        // 保存token到本地存储
-        localStorage.setItem('token', token);
+        localStorage.setItem('token', response.data.token);
         
         // 获取用户信息
-        const userResponse = await api.get('/auth/me');
-        setUser(userResponse.data.user);
+        const userResponse = await api.get('/api/auth/me');
+        if (userResponse.data.success) {
+          setUser(userResponse.data.user);
+        }
       }
     } catch (err: any) {
       setError(err.response?.data?.message || '注册失败，请重试');
