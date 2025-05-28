@@ -1,7 +1,8 @@
+// 部署触发时间: 2024-12-19 22:45:00
 import { VercelRequest, VercelResponse } from '@vercel/node';
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
-  // 设置CORS头
+  // 设置 CORS 头
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -41,10 +42,10 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
 
   // 默认简单响应
   res.status(200).json({
-    message: 'Simple API endpoint working!',
+    message: 'Simple API endpoint is working!',
     timestamp: new Date().toISOString(),
     method: req.method,
     url: req.url,
-    environment: process.env.NODE_ENV || 'unknown'
+    environment: process.env.NODE_ENV || 'development'
   });
 } 
