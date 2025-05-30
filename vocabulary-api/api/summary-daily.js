@@ -2,7 +2,9 @@ const axios = require('axios');
 
 // DeepSeek API配置
 const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
-const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
+const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY || 'sk-a6844d61ab0542abb744366ddafc3668';
+
+console.log('API启动，DeepSeek配置状态:', !!DEEPSEEK_API_KEY);
 
 // 生成今日总结的提示词模板
 function generatePrompt(learningData) {

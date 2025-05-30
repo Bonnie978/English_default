@@ -12,7 +12,7 @@
     "test:supabase": "ts-node scripts/testSupabase.ts",
     "migrate:supabase": "ts-node scripts/migrateToSupabase.ts",
     "create:admin": "node scripts/createAdminUser.js",
-    "vercel-build": "npm run build"
+    "vercel-build": "echo 'No build needed for API functions'"
   },
   "keywords": [],
   "author": "",
