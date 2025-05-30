@@ -9,8 +9,21 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 export default async function handler(req, res) {
   try {
-    // 设置CORS头 - 特别针对分开部署
-    res.setHeader('Access-Control-Allow-Origin', 'https://english-default-fr.vercel.app');
+    // 设置CORS头 - 支持多个前端域名
+    const allowedOrigins = [
+      'https://english-default-fr.vercel.app',
+      'https://english-default-knhypz10g-bonnies-projects-705981ff.vercel.app',
+      'http://localhost:3000',
+      'http://localhost:3001'
+    ];
+    
+    const origin = req.headers.origin;
+    if (allowedOrigins.includes(origin) || origin?.includes('english-default') || origin?.includes('bonnies-projects')) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+    } else {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+    }
+    
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
