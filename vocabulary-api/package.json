@@ -4,9 +4,15 @@
   "description": "Vocabulary learning application backend API",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "node -r dotenv/config server.js",
-    "start": "node server.js",
-    "test": "node scripts/testSmartRecommendation.js"
+    "start": "node dist/index.js",
+    "dev": "nodemon --ignore node_modules --ignore dist --ignore logs --ignore app.log --exec ts-node src/index.ts",
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "seed:words": "ts-node scripts/seedWords.ts",
+    "test:supabase": "ts-node scripts/testSupabase.ts",
+    "migrate:supabase": "ts-node scripts/migrateToSupabase.ts",
+    "create:admin": "node scripts/createAdminUser.js",
+    "vercel-build": "npm run build"
   },
   "keywords": [],
   "author": "",
