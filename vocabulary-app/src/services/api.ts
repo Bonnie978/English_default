@@ -13,8 +13,8 @@ const getApiBaseUrl = () => {
     return 'http://localhost:3001';
   }
   
-  // 生产环境 - 使用相对路径调用同域名下的API（用于单体部署）
-  return '';
+  // 生产环境 - 指向后端API域名
+  return 'https://english-default-two.vercel.app';
 };
 
 const api = axios.create({
