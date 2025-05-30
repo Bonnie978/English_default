@@ -6,6 +6,7 @@ import { useLearning } from '../hooks/useLearning';
 import api from '../services/api';
 import BottomNavbar from '../components/common/BottomNavbar';
 import Loading from '../components/common/Loading';
+import DailySummary from '../components/DailySummary/DailySummary';
 
 // 接口定义
 interface LearningStats {
@@ -121,6 +122,24 @@ const HomePage: React.FC = () => {
             <WelcomeTitle>欢迎使用背词助手</WelcomeTitle>
             <WelcomeSubtitle>高效记忆单词，提升英语能力</WelcomeSubtitle>
           </WelcomeSection>
+
+          {/* 今日总结模块 */}
+          {user && stats && (
+            <DailySummary 
+              learningData={{
+                totalWordsLearned: stats.totalWordsLearned || 0,
+                masteredWords: stats.masteredWords || 0,
+                streakDays: stats.streakDays || 0,
+                todayProgress: {
+                  learned: progress.learned || 0,
+                  total: progress.total || 10
+                },
+                recentMistakes: 0, // 可以从其他API获取
+                correctRate: user?.learningStats?.correctRate || 0
+              }}
+              onRefresh={fetchStats}
+            />
+          )}
 
           {/* 添加错误提示 */}
           {error && (
