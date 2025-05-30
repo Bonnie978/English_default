@@ -25,10 +25,10 @@ const WordlistPage: React.FC = () => {
   
   // 获取每日单词
   useEffect(() => {
-    if (dailyWords.length === 0) {
+    if ((dailyWords?.length || 0) === 0) {
       fetchDailyWords();
     }
-  }, [fetchDailyWords, dailyWords.length]);
+  }, [fetchDailyWords, dailyWords?.length]);
   
   // 处理上一个单词
   const handlePrevWord = () => {
@@ -39,14 +39,14 @@ const WordlistPage: React.FC = () => {
   
   // 处理下一个单词
   const handleNextWord = () => {
-    if (currentWordIndex < dailyWords.length - 1) {
+    if (currentWordIndex < (dailyWords?.length || 0) - 1) {
       setCurrentWordIndex(currentWordIndex + 1);
     }
   };
   
   // 切换单词掌握状态
   const handleToggleMastered = async () => {
-    if (dailyWords.length > 0) {
+    if ((dailyWords?.length || 0) > 0) {
       const currentWord = dailyWords[currentWordIndex];
       await markWordAsMastered(currentWord.id);
     }
@@ -72,7 +72,7 @@ const WordlistPage: React.FC = () => {
   );
   
   // 加载状态
-  if (loading && dailyWords.length === 0) {
+  if (loading && (dailyWords?.length || 0) === 0) {
     return (
       <Container>
         <HeaderBar title="今日单词" showBack rightContent={renderRightContent()} />
@@ -84,7 +84,7 @@ const WordlistPage: React.FC = () => {
   }
   
   // 错误状态
-  if (error && dailyWords.length === 0) {
+  if (error && (dailyWords?.length || 0) === 0) {
     return (
       <Container>
         <HeaderBar title="今日单词" showBack />
@@ -97,7 +97,7 @@ const WordlistPage: React.FC = () => {
   }
   
   // 没有数据
-  if (!loading && dailyWords.length === 0) {
+  if (!loading && (dailyWords?.length || 0) === 0) {
     return (
       <Container>
         <HeaderBar title="今日单词" showBack />
@@ -111,8 +111,8 @@ const WordlistPage: React.FC = () => {
   }
   
   // 有单词数据，显示学习界面
-  const currentWord = dailyWords[currentWordIndex];
-  const isCurrentWordMastered = masteredWordIds.includes(currentWord?.id);
+  const currentWord = dailyWords?.[currentWordIndex];
+  const isCurrentWordMastered = masteredWordIds?.includes(currentWord?.id);
   
   return (
     <Container>
@@ -125,7 +125,7 @@ const WordlistPage: React.FC = () => {
       <MainContent>
         <ProgressBar 
           current={currentWordIndex + 1} 
-          total={dailyWords.length} 
+          total={dailyWords?.length || 0} 
           label="学习进度" 
         />
         
@@ -140,7 +140,7 @@ const WordlistPage: React.FC = () => {
           onPrevious={handlePrevWord}
           onNext={handleNextWord}
           isPreviousDisabled={currentWordIndex === 0}
-          isNextDisabled={currentWordIndex === dailyWords.length - 1}
+          isNextDisabled={currentWordIndex === (dailyWords?.length || 0) - 1}
         />
         
         <CompleteButtonContainer>
