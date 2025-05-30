@@ -8,13 +8,11 @@ yarn-error.log*
 build/
 dist/
 
-# Environment variables
-# .env  # 临时注释掉，用于部署
-# .env
-# .env.local
-# .env.development.local
-# .env.test.local
-# .env.production.local
+# Environment variables - 允许.env文件被追踪
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # Logs
 *.log
@@ -46,9 +44,6 @@ jspm_packages/
 
 # Yarn Integrity file
 .yarn-integrity
-
-# dotenv environment variables file
-# .env  # 临时注释掉，用于部署
 
 # IDE files
 .vscode/
