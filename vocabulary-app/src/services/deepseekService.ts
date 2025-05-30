@@ -28,7 +28,7 @@ class DeepSeekService {
    */
   async getDailySummary(learningData: LearningData): Promise<DailySummary> {
     try {
-      const response = await api.post('/api/summary/daily', { learningData });
+      const response = await api.post('/api/summary-daily', { learningData });
       return response.data.summary;
     } catch (error) {
       console.error('Error getting daily summary:', error);
@@ -113,7 +113,7 @@ class DeepSeekService {
    */
   async getSmartSuggestions(learningData: LearningData): Promise<string[]> {
     try {
-      const response = await api.post('/api/summary/suggestions', { learningData });
+      const response = await api.post('/api/summary-suggestions', { learningData });
       return response.data.suggestions;
     } catch (error) {
       console.error('Error getting smart suggestions:', error);
