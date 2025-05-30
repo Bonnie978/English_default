@@ -113,8 +113,10 @@ class DeepSeekService {
    */
   async getSmartSuggestions(learningData: LearningData): Promise<string[]> {
     try {
-      const response = await api.post('/api/summary-suggestions', { learningData });
-      return response.data.suggestions;
+      // 暂时直接使用本地生成，因为API端点不存在
+      // const response = await api.post('/api/summary-suggestions', { learningData });
+      // return response.data.suggestions;
+      return this.generateFallbackSuggestions(learningData);
     } catch (error) {
       console.error('Error getting smart suggestions:', error);
       return this.generateFallbackSuggestions(learningData);
