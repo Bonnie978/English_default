@@ -5,12 +5,12 @@ const http = require('http');
 const BASE_URL = 'https://your-app-name.vercel.app';
 
 // 测试端点列表
-const apiEndpoints = [
-  '/api/hello',
-  '/api/words-daily',
-  '/api/words-stats',
-  '/api/words-progress',
-  '/api/words-review'
+const endpoints = [
+  '/api/test',
+  '/api/debug',
+  '/api/health',
+  '/api/words/stats',
+  '/api/auth/register'
 ];
 
 function makeRequest(url) {
@@ -54,7 +54,7 @@ function makeRequest(url) {
 async function checkDeployment() {
   console.log('🔍 检查API部署状态...\n');
   
-  for (const endpoint of apiEndpoints) {
+  for (const endpoint of endpoints) {
     const url = BASE_URL + endpoint;
     
     try {

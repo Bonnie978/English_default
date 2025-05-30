@@ -152,15 +152,6 @@ export const updateWordMastery = async (req: Request, res: Response) => {
 // 获取学习统计
 export const getLearningStats = async (req: Request, res: Response) => {
   try {
-    // 设置CORS头
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    
-    if (req.method === 'OPTIONS') {
-      return res.status(200).end();
-    }
-
     const userId = req.user.id;
 
     const { data: records, error } = await supabase

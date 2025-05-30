@@ -212,25 +212,13 @@ async function generateReviewPlan(userId, days = 7) {
 }
 
 export default async function handler(req, res) {
-  // 设置CORS - 支持多个前端域名
-  const allowedOrigins = [
-    'https://english-default-fr.vercel.app',
-    'https://english-default-knhypz10g-bonnies-projects-705981ff.vercel.app',
-    'http://localhost:3000',
-    'http://localhost:3001'
-  ];
-  
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin) || origin?.includes('english-default') || origin?.includes('bonnies-projects')) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  } else {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-  }
-  
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  // 强化CORS设置 - 确保在生产环境中生效
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Max-Age', '86400'); // 24小时预检缓存
   
+  // OPTIONS预检请求处理
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
