@@ -1,0 +1,56 @@
+{
+  "version": 2,
+  "functions": {
+    "vocabulary-api/api/**/*.js": {
+      "runtime": "@vercel/node"
+    },
+    "vocabulary-api/api/**/*.ts": {
+      "runtime": "@vercel/node"
+    }
+  },
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization, X-Requested-With"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/words-daily",
+      "destination": "/vocabulary-api/api/words-daily.js"
+    },
+    {
+      "source": "/api/words-stats", 
+      "destination": "/vocabulary-api/api/words-stats.js"
+    },
+    {
+      "source": "/api/words-progress",
+      "destination": "/vocabulary-api/api/words-progress.js"
+    },
+    {
+      "source": "/api/words-review",
+      "destination": "/vocabulary-api/api/words-review.js"
+    },
+    {
+      "source": "/api/hello",
+      "destination": "/vocabulary-api/api/hello.js"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "/vocabulary-api/api/[...path].ts"
+    }
+  ]
+} 
