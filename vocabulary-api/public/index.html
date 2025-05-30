@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>词汇学习API</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin: 0;
+            padding: 40px 20px;
+            text-align: center;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            max-width: 600px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        .emoji {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+        p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+        .api-list {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .api-endpoint {
+            display: block;
+            color: #80ff80;
+            text-decoration: none;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .api-endpoint:hover {
+            color: #a0ffa0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="emoji">📚</div>
+        <h1>词汇学习API</h1>
+        <p>欢迎使用词汇学习应用的后端API服务！这是一个功能强大的英语词汇学习系统。</p>
+        
+        <div class="api-list">
+            <h3>🚀 可用的API端点：</h3>
+            <a href="/api/summary/daily" class="api-endpoint">📊 今日学习总结 - /api/summary/daily</a>
+            <a href="/api/hello" class="api-endpoint">💚 健康检查 - /api/hello</a>
+        </div>
+        
+        <p>🤖 集成DeepSeek AI技术，为您提供个性化的学习分析和激励内容。</p>
+        <p><small>🔧 API状态：运行正常 | 🌟 由Vercel提供支持</small></p>
+    </div>
+</body>
+</html> 
