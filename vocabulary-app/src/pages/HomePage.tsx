@@ -124,12 +124,12 @@ const HomePage: React.FC = () => {
           </WelcomeSection>
 
           {/* 今日总结模块 */}
-          {user && stats && (
+          {user && (
             <DailySummary 
               learningData={{
-                totalWordsLearned: stats.totalWordsLearned || 0,
-                masteredWords: stats.masteredWords || 0,
-                streakDays: stats.streakDays || 0,
+                totalWordsLearned: stats?.totalWordsLearned || 0,
+                masteredWords: stats?.masteredWords || 0,
+                streakDays: stats?.streakDays || 0,
                 todayProgress: {
                   learned: progress.learned || 0,
                   total: progress.total || 10
