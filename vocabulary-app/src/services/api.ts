@@ -13,8 +13,8 @@ const getApiBaseUrl = () => {
     return 'http://localhost:3001';
   }
   
-  // 生产环境 - 指向后端API域名
-  return 'https://english-default-two.vercel.app';
+  // 生产环境 - 指向正确的后端API域名
+  return 'https://english-default-steel.vercel.app';
 };
 
 const api = axios.create({
