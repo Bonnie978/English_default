@@ -48,30 +48,39 @@ app.use(cors({
   optionsSuccessStatus: 200
 }));
 
-// 数据库连接（简化版 - 只使用Supabase）
-let redisConnected = false;
-const initializeServices = async () => {
-  if (!redisConnected && process.env.NODE_ENV !== 'production') {
-    try {
-      // 只在开发环境连接Redis（可选）
+// 初始化数据库连接和Redis（仅在需要时）
+async function initializeServices() {
+  try {
+    logger.info('🚀 Initializing services...');
+    
+    // Redis连接 - 仅在非Vercel环境或有REDIS_URL时连接
+    if (!process.env.VERCEL || process.env.REDIS_URL) {
+      try {
         await connectRedis();
-      console.log('🔌 Redis connected (development)');
-      redisConnected = true;
-    } catch (error) {
-      console.warn('Redis connection failed (optional):', error);
-      // Redis连接失败不影响应用运行
+        logger.info('✅ Redis initialized successfully');
+      } catch (redisError: any) {
+        logger.warn('⚠️ Redis connection failed, continuing without Redis:', redisError.message);
+      }
+    } else {
+      logger.info('📱 Running on Vercel without Redis - using memory cache');
+    }
+    
+    logger.info('✅ All services initialized successfully');
+  } catch (error) {
+    logger.error('❌ Service initialization failed:', error);
+    // 在Vercel环境中不要退出进程，而是继续运行
+    if (!process.env.VERCEL) {
+      process.exit(1);
     }
   }
-};
+}
 
-// 在需要时初始化服务
-app.use(async (req, res, next) => {
-  // 只在开发环境初始化Redis
-  if (process.env.NODE_ENV !== 'production') {
-    await initializeServices();
-  }
-  next();
-});
+// 在非Vercel环境中初始化服务，在Vercel中跳过以避免阻塞
+if (!process.env.VERCEL) {
+  initializeServices();
+} else {
+  logger.info('🌐 Running on Vercel - skipping service initialization');
+}
 
 console.log('🚀 Server starting with Supabase integration...');
 
