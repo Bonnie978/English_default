@@ -19,7 +19,7 @@ const getApiBaseUrl = () => {
 
 const api = axios.create({
   baseURL: getApiBaseUrl(),
-  timeout: 10000, // 10秒超时
+  timeout: 25000, // 25秒超时 - 匹配后端DeepSeek API处理时间
   headers: {
     'Content-Type': 'application/json',
   },
