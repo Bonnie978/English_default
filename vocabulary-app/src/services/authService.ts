@@ -79,7 +79,16 @@ class AuthService {
   async getCurrentUser(): Promise<AuthUser | null> {
     console.log('🔍 AuthService: getCurrentUser called');
     try {
-      const { data: { user }, error } = await supabase.auth.getUser();
+      // 添加超时处理
+      const timeout = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('获取用户信息超时')), 8000)
+      );
+      
+      const { data: { user }, error } = await Promise.race([
+        supabase.auth.getUser(),
+        timeout
+      ]) as any;
+      
       console.log('📋 AuthService: getUser result:', {
         hasUser: !!user,
         userEmail: user?.email,
@@ -89,7 +98,10 @@ class AuthService {
       });
       return user as AuthUser;
     } catch (error) {
-      console.error('❌ AuthService: 获取用户信息失败:', error);
+      console.error('❌ AuthService: 获取用户信息失败:', {
+        message: (error as Error).message,
+        timestamp: new Date().toISOString()
+      });
       return null;
     }
   }
@@ -147,15 +159,32 @@ class AuthService {
   // 获取当前会话
   async getSession() {
     console.log('🔍 AuthService: getSession called');
-    const { data: { session }, error } = await supabase.auth.getSession();
-    console.log('📋 AuthService: getSession result:', {
-      hasSession: !!session,
-      hasUser: !!session?.user,
-      userEmail: session?.user?.email,
-      hasError: !!error,
-      error: error?.message
-    });
-    return session;
+    try {
+      // 添加超时处理
+      const timeout = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('获取会话信息超时')), 8000)
+      );
+      
+      const { data: { session }, error } = await Promise.race([
+        supabase.auth.getSession(),
+        timeout
+      ]) as any;
+      
+      console.log('📋 AuthService: getSession result:', {
+        hasSession: !!session,
+        hasUser: !!session?.user,
+        userEmail: session?.user?.email,
+        hasError: !!error,
+        error: error?.message
+      });
+      return session;
+    } catch (error) {
+      console.error('❌ AuthService: 获取会话信息失败:', {
+        message: (error as Error).message,
+        timestamp: new Date().toISOString()
+      });
+      return null;
+    }
   }
 }
 

@@ -48,13 +48,24 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         setUser(currentUser);
       } catch (err) {
         console.error('❌ SupabaseAuthProvider: 获取用户信息失败:', err);
+        // 即使失败也要将用户设置为null，表示未登录
+        setUser(null);
       } finally {
         console.log('🏁 SupabaseAuthProvider: Setting loading to false');
         setLoading(false);
       }
     };
 
-    getCurrentUser();
+    // 添加整体超时机制，确保即使getCurrentUser卡住也能继续
+    const overallTimeout = setTimeout(() => {
+      console.log('⚠️ SupabaseAuthProvider: Overall timeout reached, setting loading to false');
+      setLoading(false);
+      setUser(null);
+    }, 10000); // 10秒总超时
+
+    getCurrentUser().finally(() => {
+      clearTimeout(overallTimeout);
+    });
 
     // 监听认证状态变化
     console.log('👂 SupabaseAuthProvider: Setting up auth state listener');
@@ -71,6 +82,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     return () => {
       console.log('🛑 SupabaseAuthProvider: Cleanup - unsubscribing auth listener');
+      clearTimeout(overallTimeout);
       subscription?.unsubscribe();
     };
   }, []);
