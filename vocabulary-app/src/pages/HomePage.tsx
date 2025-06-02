@@ -7,6 +7,7 @@ import api from '../services/api';
 import BottomNavbar from '../components/common/BottomNavbar';
 import Loading from '../components/common/Loading';
 import DailySummary from '../components/DailySummary/DailySummary';
+import { realDataService } from '../services/realDataService';
 
 // 接口定义
 interface LearningStats {
@@ -16,10 +17,18 @@ interface LearningStats {
   totalExercises: number;
 }
 
+interface WrongAnswerStats {
+  total: number;
+  read: number;
+  listen: number;
+  write: number;
+}
+
 const HomePage: React.FC = () => {
   const { user, loading } = useSupabaseAuth();
   const { progress, loading: dailyWordsLoading } = useLearning();
   const [stats, setStats] = useState<LearningStats | null>(null);
+  const [wrongStats, setWrongStats] = useState<WrongAnswerStats>({ total: 0, read: 0, listen: 0, write: 0 });
   const [statsLoading, setStatsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -38,6 +47,8 @@ const HomePage: React.FC = () => {
       setStatsLoading(true);
       setError(null);
       console.log('HomePage: Fetching stats...');
+      
+      // 获取学习统计数据
       const response = await api.get('/api/words-stats');
       if (response.data.success) {
         setStats(response.data.stats);
@@ -45,32 +56,30 @@ const HomePage: React.FC = () => {
       } else {
         throw new Error(response.data.message || '无法获取统计数据');
       }
-    } catch (error: any) {
-      console.error('HomePage: Error fetching stats:', error);
-      
-      if (error.response?.status === 401) {
-        // 如果是认证错误，使用默认数据而不是显示错误
-        console.log('HomePage: Using default stats due to auth error');
-        setStats({
-          totalWordsLearned: 0,
-          masteredWords: 0,
-          streakDays: 0,
-          totalExercises: 0
-        });
-        setError(null); // 不显示错误信息
-      } else if (error.response?.status === 404) {
-        // API 路由不存在，使用默认数据
-        console.log('HomePage: API not found, using default stats');
-        setStats({
-          totalWordsLearned: 0,
-          masteredWords: 0,
-          streakDays: 0,
-          totalExercises: 0
-        });
-        setError(null);
-      } else {
-        setError(error.message || '获取统计数据失败，请稍后再试');
+
+      // 获取错题统计数据
+      try {
+        const wrongAnswersResult = await realDataService.getRealWrongAnswers(1, 100, 'all');
+        const wrongAnswers = wrongAnswersResult.wrongAnswers;
+        
+        const wrongStatsData = {
+          total: wrongAnswers.length,
+          read: wrongAnswers.filter(w => w.type === 'read').length,
+          listen: wrongAnswers.filter(w => w.type === 'listen').length,
+          write: wrongAnswers.filter(w => w.type === 'write').length
+        };
+        
+        setWrongStats(wrongStatsData);
+        console.log('HomePage: Wrong answer stats fetched successfully');
+      } catch (wrongError) {
+        console.error('获取错题统计失败:', wrongError);
+        // 错题统计失败不影响页面其他功能
+        setWrongStats({ total: 0, read: 0, listen: 0, write: 0 });
       }
+      
+    } catch (err: any) {
+      console.error('HomePage: Failed to fetch stats:', err);
+      setError(err.response?.data?.message || err.message || '获取统计数据失败');
     } finally {
       setStatsLoading(false);
     }
@@ -226,20 +235,20 @@ const HomePage: React.FC = () => {
               <MistakeStatsSection>
                 <ProgressInfo>
                   <ProgressLabel>累计错题</ProgressLabel>
-                  <ProgressValue>24题</ProgressValue>
+                  <ProgressValue>{wrongStats.total}题</ProgressValue>
                 </ProgressInfo>
                 <TypeGrid>
                   <TypeItem>
                     <TypeLabel>阅读</TypeLabel>
-                    <TypeValue>8</TypeValue>
+                    <TypeValue>{wrongStats.read}</TypeValue>
                   </TypeItem>
                   <TypeItem>
                     <TypeLabel>听力</TypeLabel>
-                    <TypeValue>10</TypeValue>
+                    <TypeValue>{wrongStats.listen}</TypeValue>
                   </TypeItem>
                   <TypeItem>
                     <TypeLabel>写作</TypeLabel>
-                    <TypeValue>6</TypeValue>
+                    <TypeValue>{wrongStats.write}</TypeValue>
                   </TypeItem>
                 </TypeGrid>
               </MistakeStatsSection>

@@ -1,4 +1,5 @@
 import api from './api';
+import { realDataService } from './realDataService';
 
 export type ExerciseType = 'read' | 'listen' | 'write';
 export type ExerciseStatusType = 'not-started' | 'completed' | 'failed';
@@ -281,27 +282,39 @@ export const evaluateWriting = async (exerciseId: string, content: string, targe
 };
 
 class ExerciseService {
-  // 获取练习状态
+  // 获取练习状态 - 使用真实数据
   async getExerciseStatus(): Promise<ExerciseStatus> {
     try {
-      const response = await api.get('/exercise/status');
-      return response.data;
+      // 使用真实数据服务获取练习状态
+      const realStatus = await realDataService.getRealExerciseStatus();
+      return realStatus;
     } catch (error) {
       console.error('获取练习状态失败:', error);
-      // 返回模拟数据
-      return this.getMockExerciseStatus();
+      // 返回默认状态而不是模拟数据
+      return {
+        read: 'not-started',
+        listen: 'not-started',
+        write: 'not-started'
+      };
     }
   }
 
-  // 获取学习进度
+  // 获取学习进度 - 使用真实数据
   async getLearningProgress(): Promise<LearningProgress> {
     try {
-      const response = await api.get('/learning/progress');
-      return response.data;
+      // 使用真实数据服务获取学习进度
+      const realProgress = await realDataService.getRealLearningProgress();
+      return realProgress;
     } catch (error) {
       console.error('获取学习进度失败:', error);
-      // 返回模拟数据
-      return this.getMockLearningProgress();
+      // 返回默认空数据而不是模拟数据
+      return {
+        totalWords: 0,
+        masteredWords: 0,
+        todayLearned: 0,
+        remainingExercises: 0,
+        progressPercentage: 0
+      };
     }
   }
 
@@ -325,31 +338,6 @@ class ExerciseService {
       console.error('提交练习失败:', error);
       throw new Error('提交练习失败，请稍后重试');
     }
-  }
-
-  // 模拟练习状态数据
-  private getMockExerciseStatus(): ExerciseStatus {
-    return {
-      read: 'completed',
-      listen: 'completed',
-      write: 'not-started'
-    };
-  }
-
-  // 模拟学习进度数据
-  private getMockLearningProgress(): LearningProgress {
-    const totalWords = 50;
-    const masteredWords = 23;
-    const todayLearned = 8;
-    const remainingExercises = 2;
-    
-    return {
-      totalWords,
-      masteredWords,
-      todayLearned,
-      remainingExercises,
-      progressPercentage: Math.round((masteredWords / totalWords) * 100)
-    };
   }
 }
 

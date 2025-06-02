@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { WrongAnswerData } from '../components/wrong/WrongAnswerCard';
-import { getMockWrongAnswers } from '../services/wrongAnswerService';
+import { getWrongAnswers, markWrongAsReviewed } from '../services/wrongAnswerService';
 
 export const useWrongAnswers = () => {
   const [wrongAnswers, setWrongAnswers] = useState<WrongAnswerData[]>([]);
@@ -12,7 +12,7 @@ export const useWrongAnswers = () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await getMockWrongAnswers();
+      const data = await getWrongAnswers(1, 100, 'all'); // 获取所有错题
       setWrongAnswers(data.wrongAnswers);
     } catch (err: any) {
       setError(err.message || '获取错题列表失败');
@@ -24,9 +24,9 @@ export const useWrongAnswers = () => {
   // 标记为已复习
   const markAsReviewed = useCallback(async (id: string) => {
     try {
-      // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await markWrongAsReviewed(id);
       
+      // 更新本地状态
       setWrongAnswers(prev => 
         prev.map(item => 
           item.id === id 

@@ -10,26 +10,18 @@ import FunctionMenu from '../components/profile/FunctionMenu';
 import SettingsSection from '../components/profile/SettingsSection';
 import BottomNavbar from '../components/common/BottomNavbar';
 import Loading from '../components/common/Loading';
-import api from '../services/api';
+import { realDataService } from '../services/realDataService';
 
 const ProfilePage: React.FC = () => {
   const { user, logout } = useSupabaseAuth();
   const [activeSection, setActiveSection] = useState<'stats' | 'settings'>('stats');
   const [userStats, setUserStats] = useState({
-    totalWords: 480,
-    accuracy: 85,
-    masteredWords: 372,
-    studyHours: 128
+    totalWords: 0,
+    accuracy: 0,
+    masteredWords: 0,
+    studyHours: 0
   });
-  const [weeklyData] = useState([
-    { day: '周一', words: 25 },
-    { day: '周二', words: 40 },
-    { day: '周三', words: 30 },
-    { day: '周四', words: 50 },
-    { day: '周五', words: 40 },
-    { day: '周六', words: 20 },
-    { day: '周日', words: 35 },
-  ]);
+  const [weeklyData, setWeeklyData] = useState<{ day: string; words: number }[]>([]);
   const [settings, setSettings] = useState({
     dailyWordCount: 10,
     notifications: true,
@@ -45,16 +37,18 @@ const ProfilePage: React.FC = () => {
       try {
         setLoading(true);
         
-        // 获取学习统计
-        const statsResponse = await api.get('/api/words-stats');
-        if (statsResponse.data.success) {
-          setUserStats({
-            totalWords: statsResponse.data.stats.totalWords || 480,
-            accuracy: statsResponse.data.stats.accuracy || 85,
-            masteredWords: statsResponse.data.stats.masteredWords || 372,
-            studyHours: statsResponse.data.stats.studyHours || 128
-          });
-        }
+        // 使用真实数据服务获取学习统计
+        const realStats = await realDataService.getRealLearningStats();
+        setUserStats({
+          totalWords: realStats.totalWords,
+          accuracy: realStats.accuracy,
+          masteredWords: realStats.masteredWords,
+          studyHours: realStats.studyHours
+        });
+
+        // 获取真实周学习数据
+        const realWeeklyData = await realDataService.getRealWeeklyData();
+        setWeeklyData(realWeeklyData);
         
         // 如果有用户设置，更新设置状态
         if (user?.settings) {
@@ -66,13 +60,14 @@ const ProfilePage: React.FC = () => {
         }
       } catch (err: any) {
         console.error('获取用户数据失败:', err);
-        // 使用默认数据
+        // 使用空数据而不是假数据
         setUserStats({
-          totalWords: 480,
-          accuracy: 85,
-          masteredWords: 372,
-          studyHours: 128
+          totalWords: 0,
+          accuracy: 0,
+          masteredWords: 0,
+          studyHours: 0
         });
+        setWeeklyData([]);
       } finally {
         setLoading(false);
       }
