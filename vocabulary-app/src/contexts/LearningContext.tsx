@@ -49,15 +49,19 @@ export const LearningProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const response = await api.get('/api/words-daily');
       
       if (response.data.success) {
-        setDailyWords(response.data.words);
-        setProgress(response.data.progress);
+        setDailyWords(response.data.data);
         
-        // 获取已掌握的单词ID
-        const mastered = response.data.words
-          .filter((word: any, index: number) => {
-            return word.mastered || (index < response.data.progress.learned);
-          })
-          .map((word: any) => word.id);
+        // 修改：从stats构建progress对象
+        const stats = response.data.stats;
+        setProgress({
+          learned: stats.total_studied || 0,
+          total: (stats.total_studied || 0) + (response.data.data?.length || 0)
+        });
+        
+        // 获取已掌握的单词ID（访客模式下没有已掌握的单词）
+        const mastered = response.data.data
+          ?.filter((word: any) => word.mastered)
+          ?.map((word: any) => word.id) || [];
         
         setMasteredWordIds(mastered);
       }
