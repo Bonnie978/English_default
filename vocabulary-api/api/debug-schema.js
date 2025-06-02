@@ -16,92 +16,111 @@ export default async function handler(req, res) {
   try {
     const supabase = createClient(supabaseUrl, supabaseKey);
     
-    // 查询表结构信息
+    // 查询表结构信息 - 使用更简单的方法
     const tableSchemas = {};
     
-    // 查询user_progress表结构
+    // 直接查询表的columns信息
     try {
-      const { data, error } = await supabase.rpc('exec_sql', {
-        sql: `
-          SELECT 
-            column_name, 
-            data_type, 
-            is_nullable, 
-            column_default,
-            character_maximum_length
-          FROM information_schema.columns 
-          WHERE table_name = 'user_progress' 
-          AND table_schema = 'public'
-          ORDER BY ordinal_position;
-        `
-      });
+      const { data: progressColumns, error: progressError } = await supabase
+        .from('information_schema.columns')
+        .select('column_name, data_type, is_nullable, column_default')
+        .eq('table_name', 'user_progress')
+        .eq('table_schema', 'public')
+        .order('ordinal_position');
       
-      if (error) {
-        // 尝试另一种方法
-        const { data: userData, error: userError } = await supabase
+      tableSchemas.user_progress_columns = progressError ? 
+        `查询失败: ${progressError.message}` : 
+        progressColumns?.map(col => `${col.column_name} (${col.data_type})`);
+    } catch (e) {
+      tableSchemas.user_progress_columns = `异常: ${e.message}`;
+    }
+
+    try {
+      const { data: sessionColumns, error: sessionError } = await supabase
+        .from('information_schema.columns')
+        .select('column_name, data_type, is_nullable, column_default')
+        .eq('table_name', 'learning_sessions')
+        .eq('table_schema', 'public')
+        .order('ordinal_position');
+      
+      tableSchemas.learning_sessions_columns = sessionError ? 
+        `查询失败: ${sessionError.message}` : 
+        sessionColumns?.map(col => `${col.column_name} (${col.data_type})`);
+    } catch (e) {
+      tableSchemas.learning_sessions_columns = `异常: ${e.message}`;
+    }
+
+    // 方法2: 尝试直接INSERT一个测试记录并查看错误信息
+    const insertTests = {};
+    
+    // 测试user_progress表 - 只用最基本的字段
+    try {
+      const { error: progressInsertError } = await supabase
+        .from('user_progress')
+        .insert({
+          user_id: 'test-user',
+          word_id: 'test-word',
+          created_at: new Date().toISOString()
+        });
+      
+      insertTests.user_progress_basic = progressInsertError ? 
+        `失败: ${progressInsertError.message}` : '成功';
+    } catch (e) {
+      insertTests.user_progress_basic = `异常: ${e.message}`;
+    }
+
+    // 测试learning_sessions表 - 只用最基本的字段
+    try {
+      const { error: sessionInsertError } = await supabase
+        .from('learning_sessions')
+        .insert({
+          id: `test-session-${Date.now()}`,
+          user_id: 'test-user',
+          created_at: new Date().toISOString()
+        });
+      
+      insertTests.learning_sessions_basic = sessionInsertError ? 
+        `失败: ${sessionInsertError.message}` : '成功';
+    } catch (e) {
+      insertTests.learning_sessions_basic = `异常: ${e.message}`;
+    }
+
+    // 方法3: 尝试查看已经存在的表有什么字段（通过错误信息推断）
+    const fieldTests = {};
+    
+    // 测试user_progress是否有这些字段
+    const userProgressFields = ['id', 'user_id', 'word_id', 'mastery_level', 'last_reviewed', 'review_count', 'correct_count'];
+    for (const field of userProgressFields) {
+      try {
+        const { data, error } = await supabase
           .from('user_progress')
-          .select('*')
+          .select(field)
           .limit(1);
         
-        tableSchemas.user_progress = userError ? 
-          `查询失败: ${userError.message}` : 
-          Object.keys(userData?.[0] || {});
-      } else {
-        tableSchemas.user_progress = data;
+        fieldTests[`user_progress.${field}`] = error ? 
+          `不存在: ${error.message}` : '存在';
+      } catch (e) {
+        fieldTests[`user_progress.${field}`] = `异常: ${e.message}`;
       }
-    } catch (e) {
-      tableSchemas.user_progress = `异常: ${e.message}`;
     }
 
-    // 查询learning_sessions表结构
-    try {
-      const { data, error } = await supabase.rpc('exec_sql', {
-        sql: `
-          SELECT 
-            column_name, 
-            data_type, 
-            is_nullable, 
-            column_default,
-            character_maximum_length
-          FROM information_schema.columns 
-          WHERE table_name = 'learning_sessions' 
-          AND table_schema = 'public'
-          ORDER BY ordinal_position;
-        `
-      });
-      
-      if (error) {
-        // 尝试另一种方法
-        const { data: sessionData, error: sessionError } = await supabase
+    // 测试learning_sessions是否有这些字段  
+    const sessionFields = ['id', 'user_id', 'session_type', 'words_studied', 'correct_answers', 'total_questions', 'duration_seconds', 'completed_at'];
+    for (const field of sessionFields) {
+      try {
+        const { data, error } = await supabase
           .from('learning_sessions')
-          .select('*')
+          .select(field)
           .limit(1);
         
-        tableSchemas.learning_sessions = sessionError ? 
-          `查询失败: ${sessionError.message}` : 
-          Object.keys(sessionData?.[0] || {});
-      } else {
-        tableSchemas.learning_sessions = data;
+        fieldTests[`learning_sessions.${field}`] = error ? 
+          `不存在: ${error.message}` : '存在';
+      } catch (e) {
+        fieldTests[`learning_sessions.${field}`] = `异常: ${e.message}`;
       }
-    } catch (e) {
-      tableSchemas.learning_sessions = `异常: ${e.message}`;
     }
 
-    // 查询words表结构（用于参考）
-    try {
-      const { data: wordsData, error: wordsError } = await supabase
-        .from('words')
-        .select('*')
-        .limit(1);
-      
-      tableSchemas.words = wordsError ? 
-        `查询失败: ${wordsError.message}` : 
-        Object.keys(wordsData?.[0] || {});
-    } catch (e) {
-      tableSchemas.words = `异常: ${e.message}`;
-    }
-
-    // 尝试查询实际数据样本
+    // 尝试查询实际数据样本（用所有可能的字段）
     const sampleData = {};
     
     try {
@@ -127,6 +146,8 @@ export default async function handler(req, res) {
     return res.status(200).json({
       success: true,
       schemas: tableSchemas,
+      insertTests: insertTests,
+      fieldTests: fieldTests,
       sampleData: sampleData,
       timestamp: new Date().toISOString()
     });
