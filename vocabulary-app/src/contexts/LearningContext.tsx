@@ -1,5 +1,6 @@
 import React, { createContext, useState, useCallback } from 'react';
 import api from '../services/api';
+import { supabase } from '../config/supabase';
 
 interface Word {
   id: string;
@@ -8,6 +9,12 @@ interface Word {
   partOfSpeech: string;
   definitions: string[];
   examples: string[];
+}
+
+interface LearningSession {
+  wordId: string;
+  isCorrect: boolean;
+  timeSpent?: number;
 }
 
 interface LearningContextType {
@@ -20,6 +27,7 @@ interface LearningContextType {
   };
   fetchDailyWords: () => Promise<void>;
   markWordAsMastered: (wordId: string) => Promise<void>;
+  recordLearningSession: (words: LearningSession[]) => Promise<void>;
   masteredWordIds: string[];
 }
 
@@ -30,6 +38,7 @@ export const LearningContext = createContext<LearningContextType>({
   progress: { learned: 0, total: 0 },
   fetchDailyWords: async () => {},
   markWordAsMastered: async () => {},
+  recordLearningSession: async () => {},
   masteredWordIds: []
 });
 
@@ -39,6 +48,17 @@ export const LearningProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<{ learned: number; total: number }>({ learned: 0, total: 0 });
   const [masteredWordIds, setMasteredWordIds] = useState<string[]>([]);
+
+  // 获取用户ID的辅助函数
+  const getCurrentUserId = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      return session?.user?.id || null;
+    } catch (error) {
+      console.error('获取用户ID失败:', error);
+      return null;
+    }
+  };
 
   // 获取每日单词 - 使用 useCallback 包装
   const fetchDailyWords = useCallback(async () => {
@@ -71,6 +91,40 @@ export const LearningProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setLoading(false);
     }
   }, []); // 空依赖数组，因为 fetchDailyWords 不依赖于 Provider 内部的其他 state 或 props
+
+  // 记录学习会话 - 新增功能
+  const recordLearningSession = useCallback(async (words: LearningSession[]) => {
+    try {
+      const userId = await getCurrentUserId();
+      if (!userId) {
+        console.log('访客模式，跳过学习记录');
+        return;
+      }
+
+      const response = await api.post(`/api/words-progress?userId=${userId}`, {
+        words: words,
+        sessionType: 'daily_study'
+      });
+
+      if (response.data.success) {
+        console.log('学习会话记录成功:', response.data.data);
+        
+        // 更新本地进度状态
+        const sessionStats = response.data.data.session_stats;
+        setProgress(prev => ({
+          learned: prev.learned + sessionStats.correct_answers,
+          total: prev.total
+        }));
+
+        // 重新获取最新的学习数据
+        await fetchDailyWords();
+      }
+    } catch (err: any) {
+      console.error('记录学习会话失败:', err);
+      setError(err.response?.data?.message || '记录学习进度失败');
+      throw err;
+    }
+  }, [fetchDailyWords]);
 
   // 标记单词为已掌握 - 使用 useCallback 包装
   const markWordAsMastered = useCallback(async (wordId: string) => {
@@ -127,6 +181,7 @@ export const LearningProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         progress,
         fetchDailyWords,
         markWordAsMastered,
+        recordLearningSession,
         masteredWordIds
       }}
     >

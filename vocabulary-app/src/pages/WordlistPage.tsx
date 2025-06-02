@@ -17,10 +17,12 @@ const WordlistPage: React.FC = () => {
     progress, 
     fetchDailyWords, 
     markWordAsMastered,
+    recordLearningSession,
     masteredWordIds
   } = useLearning();
   
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
+  const [isCompleting, setIsCompleting] = useState(false);
   const navigate = useNavigate();
   
   // 获取每日单词
@@ -59,9 +61,33 @@ const WordlistPage: React.FC = () => {
     alert('播放发音功能将在后续版本中实现');
   };
   
-  // 完成学习并前往练习
-  const handleComplete = () => {
-    navigate('/exam');
+  // 完成学习会话并记录进度
+  const handleComplete = async () => {
+    try {
+      setIsCompleting(true);
+      
+      // 构建学习会话数据：所有看过的单词都记为"正确"（因为已经完成学习）
+      // 已掌握的单词标记为正确，未掌握的标记为需要复习
+      const learningSession = dailyWords.map(word => ({
+        wordId: word.id,
+        isCorrect: masteredWordIds.includes(word.id), // 基于用户是否标记为已掌握
+        timeSpent: 60 // 估算每个单词60秒学习时间
+      }));
+      
+      // 记录学习会话
+      await recordLearningSession(learningSession);
+      
+      // 显示完成提示
+      alert(`🎉 今日学习完成！\n已学习 ${dailyWords.length} 个单词\n掌握 ${masteredWordIds.length} 个单词`);
+      
+      // 跳转到练习页面
+      navigate('/exam');
+    } catch (error) {
+      console.error('完成学习失败:', error);
+      alert('记录学习进度失败，请重试');
+    } finally {
+      setIsCompleting(false);
+    }
   };
   
   // 渲染右侧内容
@@ -144,8 +170,11 @@ const WordlistPage: React.FC = () => {
         />
         
         <CompleteButtonContainer>
-          <CompleteButton onClick={handleComplete}>
-            完成背诵
+          <CompleteButton 
+            onClick={handleComplete}
+            disabled={isCompleting || loading}
+          >
+            {isCompleting ? '记录学习进度中...' : '完成背诵'}
           </CompleteButton>
         </CompleteButtonContainer>
       </MainContent>
@@ -256,8 +285,14 @@ const CompleteButton = styled.button`
   cursor: pointer;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   
-  &:hover {
+  &:hover:not(:disabled) {
     background-color: #2563eb;
+  }
+  
+  &:disabled {
+    background-color: #9ca3af;
+    cursor: not-allowed;
+    opacity: 0.7;
   }
 `;
 
