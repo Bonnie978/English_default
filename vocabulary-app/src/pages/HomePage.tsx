@@ -37,11 +37,10 @@ const HomePage: React.FC = () => {
   
   // 获取学习统计数据
   const fetchStats = useCallback(async () => {
-    // 如果用户未登录，不调用API
+    console.log('HomePage: fetchStats called, user exists:', !!user);
+    
     if (!user) {
-      console.log('HomePage: User not logged in, skipping stats fetch');
-      setStatsLoading(false);
-      setError('请先登录以查看学习统计');
+      console.log('HomePage: No user, skipping stats fetch');
       return;
     }
 
@@ -50,39 +49,65 @@ const HomePage: React.FC = () => {
       setError(null);
       console.log('HomePage: Fetching stats...');
       
+      // 添加超时处理
+      const timeout = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('API调用超时')), 10000)
+      );
+      
       // 获取学习统计数据
-      const response = await api.get('/api/words-stats');
+      console.log('HomePage: Calling /api/words-stats...');
+      const response = await Promise.race([
+        api.get('/api/words-stats'),
+        timeout
+      ]) as any;
+      
+      console.log('HomePage: API response received:', {
+        success: response.data?.success,
+        hasStats: !!response.data?.stats,
+        responseSize: JSON.stringify(response.data).length
+      });
+      
       if (response.data.success) {
         setStats(response.data.stats);
-        console.log('HomePage: Stats fetched successfully');
+        console.log('HomePage: Stats set successfully:', response.data.stats);
       } else {
         throw new Error(response.data.message || '无法获取统计数据');
       }
 
       // 获取错题统计数据
       try {
-        const wrongAnswersResult = await realDataService.getRealWrongAnswers(1, 100, 'all');
+        console.log('HomePage: Fetching wrong answers stats...');
+        const wrongAnswersResult = await Promise.race([
+          realDataService.getRealWrongAnswers(1, 100, 'all'),
+          timeout
+        ]) as any;
+        
         const wrongAnswers = wrongAnswersResult.wrongAnswers;
         
         const wrongStatsData = {
           total: wrongAnswers.length,
-          read: wrongAnswers.filter(w => w.type === 'read').length,
-          listen: wrongAnswers.filter(w => w.type === 'listen').length,
-          write: wrongAnswers.filter(w => w.type === 'write').length
+          read: wrongAnswers.filter((w: any) => w.type === 'read').length,
+          listen: wrongAnswers.filter((w: any) => w.type === 'listen').length,
+          write: wrongAnswers.filter((w: any) => w.type === 'write').length
         };
         
         setWrongStats(wrongStatsData);
-        console.log('HomePage: Wrong answer stats fetched successfully');
+        console.log('HomePage: Wrong answer stats set successfully:', wrongStatsData);
       } catch (wrongError) {
-        console.error('获取错题统计失败:', wrongError);
+        console.error('HomePage: 获取错题统计失败:', wrongError);
         // 错题统计失败不影响页面其他功能
         setWrongStats({ total: 0, read: 0, listen: 0, write: 0 });
       }
       
     } catch (err: any) {
-      console.error('HomePage: Failed to fetch stats:', err);
+      console.error('HomePage: Failed to fetch stats:', {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status
+      });
       setError(err.response?.data?.message || err.message || '获取统计数据失败');
     } finally {
+      console.log('HomePage: Setting statsLoading to false');
       setStatsLoading(false);
     }
   }, [user]);
