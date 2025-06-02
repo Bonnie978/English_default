@@ -62,37 +62,6 @@ export const LearningProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  // 检查并同步进度数据
-  const syncProgress = useCallback(async () => {
-    try {
-      const userId = await getCurrentUserId();
-      if (!userId) return;
-
-      console.log('同步进度数据...');
-      
-      // 重新获取用户进度数据
-      const response = await api.get('/api/words-daily');
-      if (response.data.success) {
-        const stats = response.data.stats;
-        const newProgress = {
-          learned: stats.total_studied || 0,
-          total: (stats.total_studied || 0) + (response.data.data?.length || 0)
-        };
-        
-        console.log('同步后的进度:', newProgress);
-        setProgress(newProgress);
-        
-        // 更新已掌握单词
-        const mastered = response.data.data
-          ?.filter((word: any) => word.mastered)
-          ?.map((word: any) => word.id) || [];
-        setMasteredWordIds(mastered);
-      }
-    } catch (error) {
-      console.error('同步进度失败:', error);
-    }
-  }, []);
-
   // 获取每日单词 - 使用 useCallback 包装
   const fetchDailyWords = useCallback(async () => {
     try {
@@ -183,9 +152,21 @@ export const LearningProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         console.log('重新获取学习数据以确保同步');
         await fetchDailyWords();
         
-        // 额外触发一次进度同步，确保数据一致性
-        setTimeout(() => {
-          syncProgress();
+        // 直接同步进度数据，避免循环依赖
+        setTimeout(async () => {
+          try {
+            const response = await api.get('/api/words-daily');
+            if (response.data.success) {
+              const stats = response.data.stats;
+              const newProgress = {
+                learned: stats.total_studied || 0,
+                total: (stats.total_studied || 0) + (response.data.data?.length || 0)
+              };
+              setProgress(newProgress);
+            }
+          } catch (error) {
+            console.error('延迟同步进度失败:', error);
+          }
         }, 1000);
       } else {
         throw new Error(response.data.message || '记录学习进度失败');
@@ -250,12 +231,57 @@ export const LearningProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, []);
 
+  // 简化的同步进度函数
+  const syncProgress = useCallback(async () => {
+    try {
+      const userId = await getCurrentUserId();
+      if (!userId) return;
+
+      const response = await api.get('/api/words-daily');
+      if (response.data.success) {
+        const stats = response.data.stats;
+        const newProgress = {
+          learned: stats.total_studied || 0,
+          total: (stats.total_studied || 0) + (response.data.data?.length || 0)
+        };
+        setProgress(newProgress);
+        
+        const mastered = response.data.data
+          ?.filter((word: any) => word.mastered)
+          ?.map((word: any) => word.id) || [];
+        setMasteredWordIds(mastered);
+      }
+    } catch (error) {
+      console.error('同步进度失败:', error);
+    }
+  }, []);
+
   useEffect(() => {
     const handleAuthStateChange = async () => {
       const userId = await getCurrentUserId();
       if (userId) {
-        await syncProgress();
+        // 直接调用API同步进度，避免循环依赖
+        try {
+          console.log('认证状态变化: 用户已登录，同步进度数据...');
+          const response = await api.get('/api/words-daily');
+          if (response.data.success) {
+            const stats = response.data.stats;
+            const newProgress = {
+              learned: stats.total_studied || 0,
+              total: (stats.total_studied || 0) + (response.data.data?.length || 0)
+            };
+            setProgress(newProgress);
+            
+            const mastered = response.data.data
+              ?.filter((word: any) => word.mastered)
+              ?.map((word: any) => word.id) || [];
+            setMasteredWordIds(mastered);
+          }
+        } catch (error) {
+          console.error('认证状态变化时同步进度失败:', error);
+        }
       } else {
+        console.log('认证状态变化: 用户未登录，清空数据');
         setDailyWords([]);
         setProgress({ learned: 0, total: 0 });
         setMasteredWordIds([]);
@@ -265,16 +291,16 @@ export const LearningProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     handleAuthStateChange();
 
-    const unsubscribe = supabase.auth.onAuthStateChange(async (event: string, session: any) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: string, session: any) => {
       if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
         await handleAuthStateChange();
       }
     });
 
     return () => {
-      unsubscribe();
+      subscription?.unsubscribe();
     };
-  }, [syncProgress]);
+  }, []); // 移除syncProgress依赖，避免无限循环
 
   return (
     <LearningContext.Provider

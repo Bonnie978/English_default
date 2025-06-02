@@ -10,6 +10,7 @@ const UserStatusDebug: React.FC = () => {
   const { progress, dailyWords, masteredWordIds, syncProgress } = useLearning();
   const [sessionInfo, setSessionInfo] = useState<any>(null);
   const [progressApiData, setProgressApiData] = useState<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -25,8 +26,8 @@ const UserStatusDebug: React.FC = () => {
           setProgressApiData(response.data);
         }
       } catch (err: any) {
-        setError(err.message);
         console.error('调试检查失败:', err);
+        setError(err.message);
       }
     };
 
