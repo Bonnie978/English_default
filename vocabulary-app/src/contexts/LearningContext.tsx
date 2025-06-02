@@ -101,10 +101,14 @@ export const LearningProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return;
       }
 
+      console.log('开始记录学习会话:', { userId, wordCount: words.length });
+      
       const response = await api.post(`/api/words-progress?userId=${userId}`, {
         words: words,
         sessionType: 'daily_study'
       });
+
+      console.log('API响应:', response.data);
 
       if (response.data.success) {
         console.log('学习会话记录成功:', response.data.data);
@@ -120,8 +124,13 @@ export const LearningProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         await fetchDailyWords();
       }
     } catch (err: any) {
-      console.error('记录学习会话失败:', err);
-      setError(err.response?.data?.message || '记录学习进度失败');
+      console.error('记录学习会话失败 - 详细错误:', {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status,
+        statusText: err.response?.statusText
+      });
+      setError(err.response?.data?.message || err.response?.data?.error || '记录学习进度失败');
       throw err;
     }
   }, [fetchDailyWords]);
