@@ -9,21 +9,15 @@ const getApiBaseUrl = () => {
     hasApiUrl: !!process.env.REACT_APP_API_URL
   });
   
-  // 如果设置了环境变量，优先使用（用于分开部署）
-  if (process.env.REACT_APP_API_URL) {
-    console.log('✅ Using REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
-    return process.env.REACT_APP_API_URL;
-  }
-  
   // 开发环境
   if (process.env.NODE_ENV === 'development') {
     console.log('✅ Using development URL: http://localhost:3001');
     return 'http://localhost:3001';
   }
   
-  // 生产环境 - 使用相对路径，通过Vercel代理到后端
-  // vercel.json 中配置了 /api/* 代理到后端服务器
-  console.log('✅ Using production proxy: empty string');
+  // 生产环境 - 强制使用相对路径代理，忽略环境变量
+  // 这样可以避免CORS问题，通过Vercel代理到后端
+  console.log('🔧 FORCE using production proxy: empty string (ignoring env vars)');
   return '';
 };
 
