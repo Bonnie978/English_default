@@ -84,22 +84,39 @@ class AuthService {
         setTimeout(() => reject(new Error('获取用户信息超时')), 8000)
       );
       
-      const { data: { user }, error } = await Promise.race([
+      console.log('🔍 AuthService: Starting supabase.auth.getUser() call...');
+      const result = await Promise.race([
         supabase.auth.getUser(),
         timeout
       ]) as any;
+      
+      console.log('📋 AuthService: Raw API result:', {
+        hasData: !!result.data,
+        hasUser: !!result.data?.user,
+        hasError: !!result.error,
+        dataKeys: result.data ? Object.keys(result.data) : [],
+        errorDetails: result.error
+      });
+      
+      const { data: { user }, error } = result;
       
       console.log('📋 AuthService: getUser result:', {
         hasUser: !!user,
         userEmail: user?.email,
         userId: user?.id,
         hasError: !!error,
-        error: error?.message
+        errorMessage: error?.message,
+        errorCode: error?.code,
+        fullError: error
       });
       return user as AuthUser;
     } catch (error) {
-      console.error('❌ AuthService: 获取用户信息失败:', {
+      console.error('❌ AuthService: 获取用户信息失败 - 详细错误:', {
+        errorType: typeof error,
+        errorConstructor: error?.constructor?.name,
         message: (error as Error).message,
+        stack: (error as Error).stack,
+        fullError: error,
         timestamp: new Date().toISOString()
       });
       return null;

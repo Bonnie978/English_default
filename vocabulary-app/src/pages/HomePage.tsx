@@ -100,10 +100,24 @@ const HomePage: React.FC = () => {
       }
       
     } catch (err: any) {
-      console.error('HomePage: Failed to fetch stats:', {
+      console.error('HomePage: Failed to fetch stats - 详细错误分析:', {
+        errorType: typeof err,
+        errorConstructor: err?.constructor?.name,
         message: err.message,
-        response: err.response?.data,
-        status: err.response?.status
+        responseStatus: err.response?.status,
+        responseStatusText: err.response?.statusText,
+        responseHeaders: err.response?.headers,
+        responseData: err.response?.data,
+        requestConfig: {
+          url: err.config?.url,
+          method: err.config?.method,
+          baseURL: err.config?.baseURL,
+          headers: err.config?.headers
+        },
+        networkError: err.code,
+        isTimeout: err.message?.includes('timeout') || err.code === 'ECONNABORTED',
+        fullError: err,
+        timestamp: new Date().toISOString()
       });
       setError(err.response?.data?.message || err.message || '获取统计数据失败');
     } finally {

@@ -15,6 +15,18 @@ const isValidUrl = (url: string | undefined): boolean => {
   }
 }
 
+// 调试环境变量
+console.log('🔍 Supabase Configuration Debug:', {
+  hasSupabaseUrl: !!supabaseUrl,
+  supabaseUrlLength: supabaseUrl?.length || 0,
+  supabaseUrlValid: isValidUrl(supabaseUrl),
+  hasSupabaseKey: !!supabaseAnonKey,
+  supabaseKeyLength: supabaseAnonKey?.length || 0,
+  supabaseKeyValid: supabaseAnonKey && supabaseAnonKey.length > 10,
+  nodeEnv: process.env.NODE_ENV,
+  envKeys: Object.keys(process.env).filter(key => key.includes('SUPABASE'))
+});
+
 // 如果没有配置 Supabase 环境变量，使用默认配置（仅用于开发）
 const defaultSupabaseUrl = 'https://placeholder.supabase.co'
 const defaultSupabaseKey = 'placeholder-key'
@@ -28,19 +40,30 @@ let supabase: any = null
 if (isValidUrl(supabaseUrl) && supabaseAnonKey && supabaseAnonKey.length > 10) {
   // 创建真实的 Supabase 客户端
   supabase = createClient(finalSupabaseUrl, finalSupabaseKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true
-  }
-})
-  console.log('✅ Supabase client initialized with real configuration')
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true
+    }
+  })
+  console.log('✅ Supabase client initialized with real configuration:', {
+    url: finalSupabaseUrl,
+    keyLength: finalSupabaseKey.length
+  });
 } else {
   // 创建模拟客户端用于开发
-  console.warn('⚠️ Supabase environment variables not configured, using mock client')
+  console.warn('⚠️ Supabase environment variables not configured, using mock client');
+  console.error('❌ Missing Supabase configuration:', {
+    hasUrl: !!supabaseUrl,
+    hasKey: !!supabaseAnonKey,
+    urlValid: isValidUrl(supabaseUrl),
+    keyValid: supabaseAnonKey && supabaseAnonKey.length > 10
+  });
+  
   supabase = {
     auth: {
-      getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+      getUser: () => Promise.resolve({ data: { user: null }, error: { message: 'Supabase not configured' } }),
+      getSession: () => Promise.resolve({ data: { session: null }, error: { message: 'Supabase not configured' } }),
       signUp: () => Promise.resolve({ data: null, error: { message: 'Supabase not configured' } }),
       signInWithPassword: () => Promise.resolve({ data: null, error: { message: 'Supabase not configured' } }),
       signOut: () => Promise.resolve({ error: null }),
