@@ -13,8 +13,9 @@ const getApiBaseUrl = () => {
     return 'http://localhost:3001';
   }
   
-  // 生产环境 - 指向正确的后端API域名
-  return 'https://english-default-steel.vercel.app';
+  // 生产环境 - 使用相对路径，通过Vercel代理到后端
+  // vercel.json 中配置了 /api/* 代理到后端服务器
+  return '';
 };
 
 const api = axios.create({
