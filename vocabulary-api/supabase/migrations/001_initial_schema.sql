@@ -89,11 +89,20 @@ ON CONFLICT DO NOTHING;
 ALTER TABLE user_progress ENABLE ROW LEVEL SECURITY;
 ALTER TABLE learning_sessions ENABLE ROW LEVEL SECURITY;
 
--- 用户只能访问自己的学习进度
+-- 为SERVICE_ROLE提供完全访问权限（绕过RLS）
+CREATE POLICY "Service role has full access to user_progress" ON user_progress
+    FOR ALL USING (current_setting('role') = 'service_role')
+    WITH CHECK (current_setting('role') = 'service_role');
+
+CREATE POLICY "Service role has full access to learning_sessions" ON learning_sessions
+    FOR ALL USING (current_setting('role') = 'service_role')
+    WITH CHECK (current_setting('role') = 'service_role');
+
+-- 用户只能访问自己的学习进度（当使用anon key时）
 CREATE POLICY "Users can only access their own progress" ON user_progress
     FOR ALL USING (auth.uid()::text = user_id::text);
 
--- 用户只能访问自己的学习会话
+-- 用户只能访问自己的学习会话（当使用anon key时）
 CREATE POLICY "Users can only access their own sessions" ON learning_sessions
     FOR ALL USING (auth.uid()::text = user_id::text);
 
