@@ -79,7 +79,7 @@ export default async function handler(req, res) {
                 .insert({
                   id: testSessionId,
                   user_id: testUserId,
-                  session_type: 'daily_study',
+                  session_type: 'reading',
                   words_studied: [realWordId], // 使用真实的word UUID
                   correct_answers: 1,
                   total_questions: 1,

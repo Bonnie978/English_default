@@ -112,7 +112,7 @@ async function updateWordProgress(userId, wordId, isCorrect, studyType = 'daily'
 /**
  * 批量记录学习会话
  */
-async function recordLearningSession(userId, words, sessionType = 'daily_study') {
+async function recordLearningSession(userId, words, sessionType = 'reading') {
   try {
     // 使用UUID格式的session ID
     const sessionId = uuidv4();
