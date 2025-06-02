@@ -67,27 +67,35 @@ export default async function handler(req, res) {
         // 测试learning_sessions写入
         if (req.query.testWrite === 'true') {
           try {
-            const { v4: uuidv4 } = await import('uuid');
-            const testSessionId = uuidv4();
-            const { error: sessionError } = await supabase
-              .from('learning_sessions')
-              .insert({
-                id: testSessionId,
-                user_id: testUserId,
-                session_type: 'debug_test',
-                words_studied: ['test-word-id'],
-                correct_answers: 1,
-                total_questions: 1,
-                duration_seconds: 60,
-                completed_at: new Date().toISOString()
-              });
-            
-            writeTests.learning_sessions_insert = sessionError ? 
-              `失败: ${sessionError.message}` : '成功';
+            // 先获取一个真实的word ID用于测试
+            const { data: wordData } = await supabase.from('words').select('id').limit(1);
+            if (wordData && wordData[0]) {
+              const { v4: uuidv4 } = await import('uuid');
+              const testSessionId = uuidv4();
+              const realWordId = wordData[0].id; // 使用真实的word UUID
               
-            // 如果插入成功，立即删除测试数据
-            if (!sessionError) {
-              await supabase.from('learning_sessions').delete().eq('id', testSessionId);
+              const { error: sessionError } = await supabase
+                .from('learning_sessions')
+                .insert({
+                  id: testSessionId,
+                  user_id: testUserId,
+                  session_type: 'debug_test',
+                  words_studied: [realWordId], // 使用真实的word UUID
+                  correct_answers: 1,
+                  total_questions: 1,
+                  duration_seconds: 60,
+                  completed_at: new Date().toISOString()
+                });
+              
+              writeTests.learning_sessions_insert = sessionError ? 
+                `失败: ${sessionError.message}` : '成功';
+                
+              // 如果插入成功，立即删除测试数据
+              if (!sessionError) {
+                await supabase.from('learning_sessions').delete().eq('id', testSessionId);
+              }
+            } else {
+              writeTests.learning_sessions_insert = '跳过: 没有可用的word_id';
             }
           } catch (e) {
             writeTests.learning_sessions_insert = `异常: ${e.message}`;
