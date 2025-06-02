@@ -67,7 +67,7 @@ const WordlistPage: React.FC = () => {
   // 渲染右侧内容
   const renderRightContent = () => (
     <MasteredCount>
-      已掌握: {progress.learned}/{progress.total}
+      已掌握: {progress?.learned || 0}/{progress?.total || 0}
     </MasteredCount>
   );
   
