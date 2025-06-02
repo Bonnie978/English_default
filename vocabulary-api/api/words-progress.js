@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import jwt from 'jsonwebtoken';
+import { v4 as uuidv4 } from 'uuid';
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -45,33 +46,30 @@ async function updateWordProgress(userId, wordId, isCorrect, studyType = 'daily'
     const now = new Date().toISOString();
     
     if (existingProgress) {
-      // 2. 更新现有记录
+      // 2. 更新现有记录 - 使用现有表结构的字段
       const newCorrectCount = existingProgress.correct_count + (isCorrect ? 1 : 0);
-      const newIncorrectCount = existingProgress.incorrect_count + (isCorrect ? 0 : 1);
-      const totalAttempts = newCorrectCount + newIncorrectCount;
-      const accuracy = totalAttempts > 0 ? newCorrectCount / totalAttempts : 0;
+      const newReviewCount = existingProgress.review_count + 1;
+      const accuracy = newReviewCount > 0 ? newCorrectCount / newReviewCount : 0;
       
-      // 计算新的掌握级别
+      // 计算新的掌握级别（0-100的百分比系统）
       let newMasteryLevel = existingProgress.mastery_level;
       if (isCorrect) {
-        // 正确回答：根据连续正确次数提升掌握级别
-        if (accuracy > 0.8 && totalAttempts >= 3) {
-          newMasteryLevel = Math.min(5, newMasteryLevel + 1);
+        // 正确回答：根据准确率提升掌握级别
+        if (accuracy > 0.8 && newReviewCount >= 3) {
+          newMasteryLevel = Math.min(100, newMasteryLevel + 10);
         }
       } else {
         // 错误回答：降低掌握级别
-        newMasteryLevel = Math.max(0, newMasteryLevel - 1);
+        newMasteryLevel = Math.max(0, newMasteryLevel - 5);
       }
 
       const { error: updateError } = await supabase
         .from('user_progress')
         .update({
           correct_count: newCorrectCount,
-          incorrect_count: newIncorrectCount,
+          review_count: newReviewCount,
           mastery_level: newMasteryLevel,
-          last_studied: now,
-          study_streak: isCorrect ? existingProgress.study_streak + 1 : 0,
-          updated_at: now
+          last_reviewed: now
         })
         .eq('id', existingProgress.id);
 
@@ -80,30 +78,26 @@ async function updateWordProgress(userId, wordId, isCorrect, studyType = 'daily'
       return {
         mastery_level: newMasteryLevel,
         accuracy: accuracy,
-        total_attempts: totalAttempts,
+        total_attempts: newReviewCount,
         is_new: false
       };
     } else {
-      // 3. 创建新记录
+      // 3. 创建新记录 - 使用现有表结构
       const { error: insertError } = await supabase
         .from('user_progress')
         .insert({
           user_id: userId,
           word_id: wordId,
           correct_count: isCorrect ? 1 : 0,
-          incorrect_count: isCorrect ? 0 : 1,
-          mastery_level: isCorrect ? 1 : 0,
-          last_studied: now,
-          study_streak: isCorrect ? 1 : 0,
-          is_difficult: !isCorrect,
-          created_at: now,
-          updated_at: now
+          review_count: 1,
+          mastery_level: isCorrect ? 20 : 0,
+          last_reviewed: now
         });
 
       if (insertError) throw insertError;
 
       return {
-        mastery_level: isCorrect ? 1 : 0,
+        mastery_level: isCorrect ? 20 : 0,
         accuracy: isCorrect ? 1 : 0,
         total_attempts: 1,
         is_new: true
@@ -120,13 +114,14 @@ async function updateWordProgress(userId, wordId, isCorrect, studyType = 'daily'
  */
 async function recordLearningSession(userId, words, sessionType = 'daily_study') {
   try {
-    const sessionId = `${userId}_${Date.now()}`;
+    // 使用UUID格式的session ID
+    const sessionId = uuidv4();
     const now = new Date().toISOString();
     
-    // 1. 记录学习会话
+    // 1. 记录学习会话 - 使用现有表结构字段
     const totalWords = words.length;
     const correctWords = words.filter(w => w.isCorrect).length;
-    const accuracy = totalWords > 0 ? correctWords / totalWords : 0;
+    const estimatedDurationSeconds = words.reduce((sum, w) => sum + (w.timeSpent || 60), 0);
     
     const { error: sessionError } = await supabase
       .from('learning_sessions')
@@ -136,11 +131,9 @@ async function recordLearningSession(userId, words, sessionType = 'daily_study')
         session_type: sessionType,
         words_studied: totalWords,
         correct_answers: correctWords,
-        accuracy: accuracy,
-        duration_minutes: words.reduce((sum, w) => sum + (w.timeSpent || 10), 0) / 60, // 估算时间
-        started_at: now,
-        completed_at: now,
-        created_at: now
+        total_questions: totalWords,
+        duration_seconds: estimatedDurationSeconds,
+        completed_at: now
       });
 
     if (sessionError) throw sessionError;
@@ -164,7 +157,7 @@ async function recordLearningSession(userId, words, sessionType = 'daily_study')
       session_stats: {
         total_words: totalWords,
         correct_answers: correctWords,
-        accuracy: accuracy
+        accuracy: totalWords > 0 ? correctWords / totalWords : 0
       },
       word_progress: progressUpdates
     };
