@@ -21,6 +21,15 @@ const WordCard: React.FC<WordCardProps> = ({
   onToggleMastered,
   onPlayPronunciation
 }) => {
+  // 兼容不同的字段名和格式
+  const definitions = word.definitions || (word as any).definition || [];
+  const examples = word.examples || (word as any).example || [];
+  
+  // 确保definitions是数组格式
+  const definitionArray = Array.isArray(definitions) ? definitions : [definitions].filter(Boolean);
+  // 确保examples是数组格式
+  const exampleArray = Array.isArray(examples) ? examples : [examples].filter(Boolean);
+  
   return (
     <CardContainer>
       {/* 单词标题栏 */}
@@ -41,7 +50,7 @@ const WordCard: React.FC<WordCardProps> = ({
       <CardContent>
         <ContentRow>
           <Label>发音:</Label>
-          <Value>{word.pronunciation}</Value>
+          <Value>{word.pronunciation || '暂无发音'}</Value>
           <PronunciationButton 
             onClick={onPlayPronunciation}
             aria-label="播放发音"
@@ -54,21 +63,21 @@ const WordCard: React.FC<WordCardProps> = ({
         
         <ContentRow>
           <Label>词性:</Label>
-          <Value>{word.partOfSpeech}</Value>
+          <Value>{word.partOfSpeech || (word as any).part_of_speech || '暂无词性'}</Value>
         </ContentRow>
         
         <ContentRow>
           <Label>释义:</Label>
-          <Value>{word.definitions.join(', ')}</Value>
+          <Value>{definitionArray.length > 0 ? definitionArray.join(', ') : '暂无释义'}</Value>
         </ContentRow>
         
         <Divider />
         
         <ExampleSection>
           <Label>例句:</Label>
-          <Example>{word.examples[0]}</Example>
+          <Example>{exampleArray[0] || '暂无例句'}</Example>
           <MaskedExample>
-            {word.examples[0].replace(word.spelling, '_________')}
+            {exampleArray[0] ? exampleArray[0].replace(word.spelling, '_________') : '暂无例句'}
           </MaskedExample>
         </ExampleSection>
       </CardContent>
