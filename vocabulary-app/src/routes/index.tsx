@@ -21,17 +21,27 @@ import AuthDebugPage from '../pages/AuthDebugPage';
 const PrivateRoute: React.FC<{ element: React.ReactElement }> = ({ element }) => {
   const { user, loading } = useSupabaseAuth();
   
-  console.log('PrivateRoute rendering:', { 
+  const getElementName = (element: React.ReactElement): string => {
+    if (typeof element.type === 'string') {
+      return element.type;
+    } else if (typeof element.type === 'function') {
+      return element.type.name || 'Anonymous';
+    }
+    return 'Unknown';
+  };
+  
+  console.log('🛡️ PrivateRoute: Rendering guard', { 
     loading, 
-    user: !!user, 
+    hasUser: !!user, 
     userEmail: user?.email,
     timestamp: new Date().toISOString(),
-    currentPath: window.location.pathname
+    currentPath: window.location.pathname,
+    targetElement: getElementName(element)
   });
 
   // 如果正在加载，显示加载状态
   if (loading) {
-    console.log('PrivateRoute: Loading state, showing loader');
+    console.log('⏳ PrivateRoute: Auth state loading, showing loader');
     return React.createElement('div', { 
       style: { 
         display: 'flex', 
@@ -50,16 +60,28 @@ const PrivateRoute: React.FC<{ element: React.ReactElement }> = ({ element }) =>
   
   // 如果没有用户，重定向到登录页
   if (!user) {
-    console.log('PrivateRoute: No user found, redirecting to login from:', window.location.pathname);
+    console.log('🚫 PrivateRoute: No user authenticated, redirecting to login', {
+      fromPath: window.location.pathname,
+      timestamp: new Date().toISOString()
+    });
     return React.createElement(Navigate, { to: '/login', replace: true });
   }
   
   // 有用户，渲染目标组件
-  console.log('PrivateRoute: User authenticated, rendering protected element');
+  console.log('✅ PrivateRoute: User authenticated, rendering protected element', {
+    userEmail: user.email,
+    targetPath: window.location.pathname,
+    elementType: getElementName(element)
+  });
   return element; 
 };
 
 const AppRouter: React.FC = () => {
+  console.log('🗺️ AppRouter: Router component rendered', {
+    currentPath: window.location.pathname,
+    timestamp: new Date().toISOString()
+  });
+
   return (
     <Router>
       <Routes>

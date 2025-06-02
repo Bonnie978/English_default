@@ -24,15 +24,32 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  console.log('🔄 SupabaseAuthProvider: Provider rendered', {
+    user: !!user,
+    userEmail: user?.email,
+    loading,
+    error,
+    timestamp: new Date().toISOString()
+  });
+
   useEffect(() => {
+    console.log('🔄 SupabaseAuthProvider: useEffect started', { timestamp: new Date().toISOString() });
+    
     // 获取当前用户
     const getCurrentUser = async () => {
+      console.log('🔍 SupabaseAuthProvider: Getting current user...');
       try {
         const currentUser = await authService.getCurrentUser();
+        console.log('✅ SupabaseAuthProvider: Current user result:', {
+          hasUser: !!currentUser,
+          userEmail: currentUser?.email,
+          userId: currentUser?.id
+        });
         setUser(currentUser);
       } catch (err) {
-        console.error('获取用户信息失败:', err);
+        console.error('❌ SupabaseAuthProvider: 获取用户信息失败:', err);
       } finally {
+        console.log('🏁 SupabaseAuthProvider: Setting loading to false');
         setLoading(false);
       }
     };
@@ -40,13 +57,20 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     getCurrentUser();
 
     // 监听认证状态变化
+    console.log('👂 SupabaseAuthProvider: Setting up auth state listener');
     const { data: { subscription } } = authService.onAuthStateChange((user) => {
-      console.log('SupabaseAuthContext: Auth state changed:', !!user);
+      console.log('🔔 SupabaseAuthProvider: Auth state changed:', {
+        hasUser: !!user,
+        userEmail: user?.email,
+        userId: user?.id,
+        timestamp: new Date().toISOString()
+      });
       setUser(user);
       setLoading(false);
     });
 
     return () => {
+      console.log('🛑 SupabaseAuthProvider: Cleanup - unsubscribing auth listener');
       subscription?.unsubscribe();
     };
   }, []);

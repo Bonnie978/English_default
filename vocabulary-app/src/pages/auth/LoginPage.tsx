@@ -11,47 +11,83 @@ const LoginPage: React.FC = () => {
   const { login, error, loading, user } = useSupabaseAuth();
   const navigate = useNavigate();
 
+  console.log('🔄 LoginPage: Component rendered', {
+    hasUser: !!user,
+    userEmail: user?.email,
+    loading,
+    isLoggingIn,
+    initialCheckDone,
+    error,
+    currentPath: window.location.pathname,
+    timestamp: new Date().toISOString()
+  });
+
   // 只在初始检查完成且用户确实已登录时才重定向
   useEffect(() => {
+    console.log('🔄 LoginPage: useEffect triggered', {
+      hasUser: !!user,
+      userEmail: user?.email,
+      loading,
+      initialCheckDone,
+      timestamp: new Date().toISOString()
+    });
+
     // 等待初始认证状态检查完成
     if (!loading) {
+      console.log('✅ LoginPage: Loading finished, setting initialCheckDone to true');
       setInitialCheckDone(true);
       
       // 只有在初始检查完成且用户真的已登录时才重定向
       if (user) {
-        console.log('LoginPage: User already logged in, redirecting to home');
+        console.log('🚀 LoginPage: User found, redirecting to home', {
+          userEmail: user.email,
+          currentPath: window.location.pathname
+        });
         navigate('/', { replace: true });
+      } else {
+        console.log('👤 LoginPage: No user found, staying on login page');
       }
+    } else {
+      console.log('⏳ LoginPage: Still loading, waiting...');
     }
   }, [user, loading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    console.log('LoginPage: handleSubmit triggered');
+    console.log('🔄 LoginPage: handleSubmit triggered');
     e.preventDefault();
     
     // 防止重复提交
     if (isLoggingIn) {
-      console.log('LoginPage: Already logging in, ignoring submit');
+      console.log('⚠️ LoginPage: Already logging in, ignoring submit');
       return;
     }
     
-    console.log('LoginPage: Attempting login with:', { email, password });
+    console.log('🔐 LoginPage: Attempting login with:', { 
+      email, 
+      hasPassword: !!password,
+      timestamp: new Date().toISOString()
+    });
     setIsLoggingIn(true);
     
     try {
       const result = await login(email, password);
-      console.log('LoginPage: login result:', result);
+      console.log('📝 LoginPage: login result:', {
+        success: result.success,
+        error: result.error,
+        hasUser: !!result.user,
+        userEmail: result.user?.email
+      });
       
       if (result.success) {
-        console.log('LoginPage: login successful, navigating');
-        // 登录成功后直接跳转
-        navigate('/', { replace: true });
+        console.log('✅ LoginPage: login successful, will be redirected by useEffect');
+        // 不在这里直接跳转，让useEffect处理
       } else {
-        console.log('LoginPage: login failed:', result.error);
+        console.log('❌ LoginPage: login failed:', result.error);
       }
     } catch (error) {
-      console.error('LoginPage: Error during login call:', error);
+      console.error('💥 LoginPage: Error during login call:', error);
     } finally {
+      console.log('🏁 LoginPage: Setting isLoggingIn to false');
       setIsLoggingIn(false);
     }
   };

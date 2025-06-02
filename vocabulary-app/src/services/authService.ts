@@ -77,12 +77,20 @@ class AuthService {
 
   // 获取当前用户
   async getCurrentUser(): Promise<AuthUser | null> {
+    console.log('🔍 AuthService: getCurrentUser called');
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      return user as AuthUser
+      const { data: { user }, error } = await supabase.auth.getUser();
+      console.log('📋 AuthService: getUser result:', {
+        hasUser: !!user,
+        userEmail: user?.email,
+        userId: user?.id,
+        hasError: !!error,
+        error: error?.message
+      });
+      return user as AuthUser;
     } catch (error) {
-      console.error('获取用户信息失败:', error)
-      return null
+      console.error('❌ AuthService: 获取用户信息失败:', error);
+      return null;
     }
   }
 
@@ -122,15 +130,32 @@ class AuthService {
 
   // 监听认证状态变化
   onAuthStateChange(callback: (user: AuthUser | null) => void) {
+    console.log('👂 AuthService: Setting up onAuthStateChange listener');
     return supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
-      callback(session?.user as AuthUser || null)
-    })
+      console.log('🔔 AuthService: Auth state change event:', {
+        event,
+        hasSession: !!session,
+        hasUser: !!session?.user,
+        userEmail: session?.user?.email,
+        userId: session?.user?.id,
+        timestamp: new Date().toISOString()
+      });
+      callback(session?.user as AuthUser || null);
+    });
   }
 
   // 获取当前会话
   async getSession() {
-    const { data: { session } } = await supabase.auth.getSession()
-    return session
+    console.log('🔍 AuthService: getSession called');
+    const { data: { session }, error } = await supabase.auth.getSession();
+    console.log('📋 AuthService: getSession result:', {
+      hasSession: !!session,
+      hasUser: !!session?.user,
+      userEmail: session?.user?.email,
+      hasError: !!error,
+      error: error?.message
+    });
+    return session;
   }
 }
 
