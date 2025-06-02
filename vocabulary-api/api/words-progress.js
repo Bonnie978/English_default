@@ -311,9 +311,30 @@ export default async function handler(req, res) {
     
   } catch (error) {
     console.error('学习进度API错误:', error);
+    console.error('请求详情:', {
+      method: req.method,
+      userId: userId,
+      body: req.body,
+      headers: {
+        'content-type': req.headers['content-type'],
+        'authorization': req.headers.authorization ? '已提供' : '未提供'
+      }
+    });
+    
+    // 详细的错误信息
+    const errorDetails = {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+      name: error.name
+    };
+    
+    console.error('详细错误:', errorDetails);
+    
     res.status(500).json({ 
       error: '服务器错误',
-      message: error.message 
+      message: error.message,
+      details: process.env.NODE_ENV === 'development' ? errorDetails : undefined
     });
   }
 } 
