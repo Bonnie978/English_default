@@ -1,9 +1,29 @@
 import { createClient } from '@supabase/supabase-js';
+import jwt from 'jsonwebtoken';
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const jwtSecret = process.env.JWT_SECRET;
+
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+/**
+ * 从Authorization header中提取并验证用户ID
+ */
+function getUserIdFromToken(authHeader) {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return null;
+  }
+  
+  try {
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, jwtSecret);
+    return decoded.userId || decoded.sub;
+  } catch (error) {
+    console.error('JWT验证失败:', error);
+    return null;
+  }
+}
 
 /**
  * 更新用户单词学习进度
@@ -238,13 +258,19 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { userId } = req.query;
+    // 优先从JWT token获取用户ID，fallback到查询参数
+    let userId = getUserIdFromToken(req.headers.authorization);
+    if (!userId) {
+      userId = req.query.userId;
+    }
     
     if (!userId || userId === 'undefined' || userId === 'null') {
       return res.status(400).json({ 
-        error: '需要用户ID' 
+        error: '需要用户ID或有效的认证token' 
       });
     }
+
+    console.log('Progress API - User ID:', userId, 'Method:', req.method);
 
     switch (req.method) {
       case 'GET':
