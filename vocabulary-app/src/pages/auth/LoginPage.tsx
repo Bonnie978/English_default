@@ -7,14 +7,21 @@ const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [initialCheckDone, setInitialCheckDone] = useState(false);
   const { login, error, loading, user } = useSupabaseAuth();
   const navigate = useNavigate();
 
-  // 如果用户已经登录，直接跳转到首页
+  // 只在初始检查完成且用户确实已登录时才重定向
   useEffect(() => {
-    if (user && !loading) {
-      console.log('LoginPage: User already logged in, redirecting to home');
-      navigate('/', { replace: true });
+    // 等待初始认证状态检查完成
+    if (!loading) {
+      setInitialCheckDone(true);
+      
+      // 只有在初始检查完成且用户真的已登录时才重定向
+      if (user) {
+        console.log('LoginPage: User already logged in, redirecting to home');
+        navigate('/', { replace: true });
+      }
     }
   }, [user, loading, navigate]);
 

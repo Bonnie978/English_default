@@ -25,12 +25,13 @@ const PrivateRoute: React.FC<{ element: React.ReactElement }> = ({ element }) =>
     loading, 
     user: !!user, 
     userEmail: user?.email,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    currentPath: window.location.pathname
   });
 
   // 如果正在加载，显示加载状态
   if (loading) {
-    console.log('PrivateRoute: Loading state');
+    console.log('PrivateRoute: Loading state, showing loader');
     return React.createElement('div', { 
       style: { 
         display: 'flex', 
@@ -38,19 +39,23 @@ const PrivateRoute: React.FC<{ element: React.ReactElement }> = ({ element }) =>
         alignItems: 'center', 
         height: '100vh',
         fontSize: '18px',
-        color: '#6b7280'
+        color: '#6b7280',
+        flexDirection: 'column'
       } 
-    }, '加载中...');
+    }, [
+      React.createElement('div', { key: 'spinner', style: { marginBottom: '16px' } }, '🔄'),
+      React.createElement('div', { key: 'text' }, '正在检查登录状态...')
+    ]);
   }
   
   // 如果没有用户，重定向到登录页
   if (!user) {
-    console.log('PrivateRoute: No user, redirecting to login');
+    console.log('PrivateRoute: No user found, redirecting to login from:', window.location.pathname);
     return React.createElement(Navigate, { to: '/login', replace: true });
   }
   
   // 有用户，渲染目标组件
-  console.log('PrivateRoute: User found, rendering element');
+  console.log('PrivateRoute: User authenticated, rendering protected element');
   return element; 
 };
 
