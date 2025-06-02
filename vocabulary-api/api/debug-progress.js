@@ -67,7 +67,8 @@ export default async function handler(req, res) {
         // 测试learning_sessions写入
         if (req.query.testWrite === 'true') {
           try {
-            const testSessionId = `${testUserId}_debug_${Date.now()}`;
+            const { v4: uuidv4 } = await import('uuid');
+            const testSessionId = uuidv4();
             const { error: sessionError } = await supabase
               .from('learning_sessions')
               .insert({
@@ -76,11 +77,9 @@ export default async function handler(req, res) {
                 session_type: 'debug_test',
                 words_studied: 1,
                 correct_answers: 1,
-                accuracy: 1.0,
-                duration_minutes: 1,
-                started_at: new Date().toISOString(),
-                completed_at: new Date().toISOString(),
-                created_at: new Date().toISOString()
+                total_questions: 1,
+                duration_seconds: 60,
+                completed_at: new Date().toISOString()
               });
             
             writeTests.learning_sessions_insert = sessionError ? 
@@ -100,7 +99,8 @@ export default async function handler(req, res) {
             const { data: wordData } = await supabase.from('words').select('id').limit(1);
             if (wordData && wordData[0]) {
               const testWordId = wordData[0].id;
-              const testProgressId = `test-progress-${Date.now()}`;
+              const { v4: uuidv4 } = await import('uuid');
+              const testProgressId = uuidv4();
               
               const { error: progressError } = await supabase
                 .from('user_progress')
@@ -109,13 +109,9 @@ export default async function handler(req, res) {
                   user_id: testUserId,
                   word_id: testWordId,
                   correct_count: 1,
-                  incorrect_count: 0,
-                  mastery_level: 1,
-                  last_studied: new Date().toISOString(),
-                  study_streak: 1,
-                  is_difficult: false,
-                  created_at: new Date().toISOString(),
-                  updated_at: new Date().toISOString()
+                  review_count: 1,
+                  mastery_level: 20,
+                  last_reviewed: new Date().toISOString()
                 });
               
               writeTests.user_progress_insert = progressError ? 
