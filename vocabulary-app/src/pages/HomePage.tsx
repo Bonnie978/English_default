@@ -7,6 +7,8 @@ import api from '../services/api';
 import BottomNavbar from '../components/common/BottomNavbar';
 import Loading from '../components/common/Loading';
 import DailySummary from '../components/DailySummary/DailySummary';
+import UserStatusDebug from '../components/debug/UserStatusDebug';
+import LoginPrompt from '../components/common/LoginPrompt';
 import { realDataService } from '../services/realDataService';
 
 // 接口定义
@@ -112,6 +114,9 @@ const HomePage: React.FC = () => {
   
   return (
     <Container>
+      {/* 调试组件 - 仅在开发环境显示 */}
+      <UserStatusDebug />
+
       {/* 顶部导航栏 */}
       <Header>
         <HeaderContent>
@@ -132,128 +137,136 @@ const HomePage: React.FC = () => {
             <WelcomeSubtitle>高效记忆单词，提升英语能力</WelcomeSubtitle>
           </WelcomeSection>
 
-          {/* 今日总结模块 */}
+          {/* 未登录用户显示登录提示 */}
+          {!user && (
+            <LoginPrompt message="请登录以保存学习进度和查看统计信息" />
+          )}
+
+          {/* 已登录用户显示学习内容 */}
           {user && (
-            <DailySummary 
-              learningData={{
-                totalWordsLearned: stats?.totalWordsLearned || 0,
-                masteredWords: stats?.masteredWords || 0,
-                streakDays: stats?.streakDays || 0,
-                todayProgress: {
-                  learned: progress.learned || 0,
-                  total: progress.total || 10
-                },
-                recentMistakes: 0, // 可以从其他API获取
-                correctRate: user?.learningStats?.correctRate || 0
-              }}
-              onRefresh={fetchStats}
-            />
+            <>
+              {/* 今日总结模块 */}
+              <DailySummary 
+                learningData={{
+                  totalWordsLearned: stats?.totalWordsLearned || 0,
+                  masteredWords: stats?.masteredWords || 0,
+                  streakDays: stats?.streakDays || 0,
+                  todayProgress: {
+                    learned: progress.learned || 0,
+                    total: progress.total || 10
+                  },
+                  recentMistakes: 0, // 可以从其他API获取
+                  correctRate: user?.learningStats?.correctRate || 0
+                }}
+                onRefresh={fetchStats}
+              />
+
+              {/* 添加错误提示 */}
+              {error && (
+                <ErrorMessage>
+                  <p>{error}</p>
+                  <button onClick={fetchStats}>重试</button>
+                </ErrorMessage>
+              )}
+
+              {/* 学习统计卡片 */}
+              <StatsCard>
+                <CardTitle>学习统计</CardTitle>
+                <StatsGrid>
+                  <StatItem>
+                    <StatLabel>已学单词</StatLabel>
+                    <StatValue>{stats?.totalWordsLearned || 0}</StatValue>
+                  </StatItem>
+                  <StatItem>
+                    <StatLabel>正确率</StatLabel>
+                    <StatValue>{user?.learningStats?.correctRate ?? 0}%</StatValue>
+                  </StatItem>
+                  <StatItem>
+                    <StatLabel>连续学习</StatLabel>
+                    <StatValue>{stats?.streakDays || 0}天</StatValue>
+                  </StatItem>
+                  <StatItem>
+                    <StatLabel>掌握单词</StatLabel>
+                    <StatValue>{stats?.masteredWords || 0}</StatValue>
+                  </StatItem>
+                </StatsGrid>
+              </StatsCard>
+
+              {/* 学习卡片 */}
+              <ActionCardsGrid>
+                {/* 开始学习卡片 */}
+                <ActionCard>
+                  <ActionCardContent>
+                    <ActionTextContainer>
+                      <CardTitle>今日学习</CardTitle>
+                      <ActionDescription>开始今天的单词学习，提升你的词汇量</ActionDescription>
+                      <ActionButton onClick={handleStartLearning}>
+                        开始学习
+                      </ActionButton>
+                    </ActionTextContainer>
+                    <ActionIcon $bgColor="#DBEAFE">
+                      <svg className="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                      </svg>
+                    </ActionIcon>
+                  </ActionCardContent>
+                  <ProgressSection>
+                    <ProgressInfo>
+                      <ProgressLabel>今日进度</ProgressLabel>
+                      <ProgressValue>
+                        {dailyWordsLoading ? '加载中...' : `${progress.learned}/${progress.total}`}
+                      </ProgressValue>
+                    </ProgressInfo>
+                    <ProgressBar>
+                      <ProgressFill 
+                        style={{ 
+                          width: dailyWordsLoading || !progress.total ? '0%' : `${(progress.learned / progress.total) * 100}%`
+                        }}
+                      />
+                    </ProgressBar>
+                  </ProgressSection>
+                </ActionCard>
+
+                {/* 错题练习卡片 */}
+                <ActionCard>
+                  <ActionCardContent>
+                    <ActionTextContainer>
+                      <CardTitle>错题练习</CardTitle>
+                      <ActionDescription>复习之前的错题，强化记忆并提高正确率</ActionDescription>
+                      <SecondaryButton onClick={handleViewWrongAnswers}>
+                        查看错题
+                      </SecondaryButton>
+                    </ActionTextContainer>
+                    <ActionIcon $bgColor="#FEE2E2">
+                      <svg className="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </ActionIcon>
+                  </ActionCardContent>
+                  <MistakeStatsSection>
+                    <ProgressInfo>
+                      <ProgressLabel>累计错题</ProgressLabel>
+                      <ProgressValue>{wrongStats.total}题</ProgressValue>
+                    </ProgressInfo>
+                    <TypeGrid>
+                      <TypeItem>
+                        <TypeLabel>阅读</TypeLabel>
+                        <TypeValue>{wrongStats.read}</TypeValue>
+                      </TypeItem>
+                      <TypeItem>
+                        <TypeLabel>听力</TypeLabel>
+                        <TypeValue>{wrongStats.listen}</TypeValue>
+                      </TypeItem>
+                      <TypeItem>
+                        <TypeLabel>写作</TypeLabel>
+                        <TypeValue>{wrongStats.write}</TypeValue>
+                      </TypeItem>
+                    </TypeGrid>
+                  </MistakeStatsSection>
+                </ActionCard>
+              </ActionCardsGrid>
+            </>
           )}
-
-          {/* 添加错误提示 */}
-          {error && (
-            <ErrorMessage>
-              <p>{error}</p>
-              <button onClick={fetchStats}>重试</button>
-            </ErrorMessage>
-          )}
-
-          {/* 学习统计卡片 */}
-          <StatsCard>
-            <CardTitle>学习统计</CardTitle>
-            <StatsGrid>
-              <StatItem>
-                <StatLabel>已学单词</StatLabel>
-                <StatValue>{stats?.totalWordsLearned || 0}</StatValue>
-              </StatItem>
-              <StatItem>
-                <StatLabel>正确率</StatLabel>
-                <StatValue>{user?.learningStats?.correctRate ?? 0}%</StatValue>
-              </StatItem>
-              <StatItem>
-                <StatLabel>连续学习</StatLabel>
-                <StatValue>{stats?.streakDays || 0}天</StatValue>
-              </StatItem>
-              <StatItem>
-                <StatLabel>掌握单词</StatLabel>
-                <StatValue>{stats?.masteredWords || 0}</StatValue>
-              </StatItem>
-            </StatsGrid>
-          </StatsCard>
-
-          {/* 学习卡片 */}
-          <ActionCardsGrid>
-            {/* 开始学习卡片 */}
-            <ActionCard>
-              <ActionCardContent>
-                <ActionTextContainer>
-                  <CardTitle>今日学习</CardTitle>
-                  <ActionDescription>开始今天的单词学习，提升你的词汇量</ActionDescription>
-                  <ActionButton onClick={handleStartLearning}>
-                    开始学习
-                  </ActionButton>
-                </ActionTextContainer>
-                <ActionIcon $bgColor="#DBEAFE">
-                  <svg className="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                  </svg>
-                </ActionIcon>
-              </ActionCardContent>
-              <ProgressSection>
-                <ProgressInfo>
-                  <ProgressLabel>今日进度</ProgressLabel>
-                  <ProgressValue>
-                    {dailyWordsLoading ? '加载中...' : `${progress.learned}/${progress.total}`}
-                  </ProgressValue>
-                </ProgressInfo>
-                <ProgressBar>
-                  <ProgressFill 
-                    style={{ 
-                      width: dailyWordsLoading || !progress.total ? '0%' : `${(progress.learned / progress.total) * 100}%`
-                    }}
-                  />
-                </ProgressBar>
-              </ProgressSection>
-            </ActionCard>
-
-            {/* 错题练习卡片 */}
-            <ActionCard>
-              <ActionCardContent>
-                <ActionTextContainer>
-                  <CardTitle>错题练习</CardTitle>
-                  <ActionDescription>复习之前的错题，强化记忆并提高正确率</ActionDescription>
-                  <SecondaryButton onClick={handleViewWrongAnswers}>
-                    查看错题
-                  </SecondaryButton>
-                </ActionTextContainer>
-                <ActionIcon $bgColor="#FEE2E2">
-                  <svg className="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </ActionIcon>
-              </ActionCardContent>
-              <MistakeStatsSection>
-                <ProgressInfo>
-                  <ProgressLabel>累计错题</ProgressLabel>
-                  <ProgressValue>{wrongStats.total}题</ProgressValue>
-                </ProgressInfo>
-                <TypeGrid>
-                  <TypeItem>
-                    <TypeLabel>阅读</TypeLabel>
-                    <TypeValue>{wrongStats.read}</TypeValue>
-                  </TypeItem>
-                  <TypeItem>
-                    <TypeLabel>听力</TypeLabel>
-                    <TypeValue>{wrongStats.listen}</TypeValue>
-                  </TypeItem>
-                  <TypeItem>
-                    <TypeLabel>写作</TypeLabel>
-                    <TypeValue>{wrongStats.write}</TypeValue>
-                  </TypeItem>
-                </TypeGrid>
-              </MistakeStatsSection>
-            </ActionCard>
-          </ActionCardsGrid>
         </ContentWrapper>
       </Main>
 

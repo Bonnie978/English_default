@@ -1,4 +1,4 @@
-import React, { createContext, useState, useCallback } from 'react';
+import React, { createContext, useState, useCallback, useEffect } from 'react';
 import api from '../services/api';
 import { supabase } from '../config/supabase';
 
@@ -28,6 +28,7 @@ interface LearningContextType {
   fetchDailyWords: () => Promise<void>;
   markWordAsMastered: (wordId: string) => Promise<void>;
   recordLearningSession: (words: LearningSession[]) => Promise<void>;
+  syncProgress: () => Promise<void>;
   masteredWordIds: string[];
 }
 
@@ -39,6 +40,7 @@ export const LearningContext = createContext<LearningContextType>({
   fetchDailyWords: async () => {},
   markWordAsMastered: async () => {},
   recordLearningSession: async () => {},
+  syncProgress: async () => {},
   masteredWordIds: []
 });
 
@@ -60,45 +62,96 @@ export const LearningProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
+  // 检查并同步进度数据
+  const syncProgress = useCallback(async () => {
+    try {
+      const userId = await getCurrentUserId();
+      if (!userId) return;
+
+      console.log('同步进度数据...');
+      
+      // 重新获取用户进度数据
+      const response = await api.get('/api/words-daily');
+      if (response.data.success) {
+        const stats = response.data.stats;
+        const newProgress = {
+          learned: stats.total_studied || 0,
+          total: (stats.total_studied || 0) + (response.data.data?.length || 0)
+        };
+        
+        console.log('同步后的进度:', newProgress);
+        setProgress(newProgress);
+        
+        // 更新已掌握单词
+        const mastered = response.data.data
+          ?.filter((word: any) => word.mastered)
+          ?.map((word: any) => word.id) || [];
+        setMasteredWordIds(mastered);
+      }
+    } catch (error) {
+      console.error('同步进度失败:', error);
+    }
+  }, []);
+
   // 获取每日单词 - 使用 useCallback 包装
   const fetchDailyWords = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       
+      // 检查用户登录状态
+      const userId = await getCurrentUserId();
+      console.log('fetchDailyWords - 用户ID:', userId);
+      
+      if (!userId) {
+        // 访客模式 - 设置空状态
+        console.log('访客模式: 设置空的学习数据');
+        setDailyWords([]);
+        setProgress({ learned: 0, total: 0 });
+        setMasteredWordIds([]);
+        setError('请登录以保存学习进度');
+        return;
+      }
+      
       const response = await api.get('/api/words-daily');
+      console.log('API响应:', response.data);
       
       if (response.data.success) {
         setDailyWords(response.data.data);
         
         // 修改：从stats构建progress对象
         const stats = response.data.stats;
-        setProgress({
+        const newProgress = {
           learned: stats.total_studied || 0,
           total: (stats.total_studied || 0) + (response.data.data?.length || 0)
-        });
+        };
+        console.log('设置新进度:', newProgress);
+        setProgress(newProgress);
         
-        // 获取已掌握的单词ID（访客模式下没有已掌握的单词）
+        // 获取已掌握的单词ID
         const mastered = response.data.data
           ?.filter((word: any) => word.mastered)
           ?.map((word: any) => word.id) || [];
         
+        console.log('已掌握单词:', mastered.length);
         setMasteredWordIds(mastered);
       }
     } catch (err: any) {
+      console.error('获取单词失败:', err);
       setError(err.response?.data?.message || '获取单词失败，请重试');
     } finally {
       setLoading(false);
     }
-  }, []); // 空依赖数组，因为 fetchDailyWords 不依赖于 Provider 内部的其他 state 或 props
+  }, []);
 
   // 记录学习会话 - 新增功能
   const recordLearningSession = useCallback(async (words: LearningSession[]) => {
     try {
       const userId = await getCurrentUserId();
       if (!userId) {
-        console.log('访客模式，跳过学习记录');
-        return;
+        console.log('访客模式，无法保存学习记录');
+        setError('请登录以保存学习进度');
+        throw new Error('用户未登录');
       }
 
       console.log('开始记录学习会话:', { userId, wordCount: words.length });
@@ -108,20 +161,34 @@ export const LearningProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         sessionType: 'reading'
       });
 
-      console.log('API响应:', response.data);
+      console.log('学习会话API响应:', response.data);
 
       if (response.data.success) {
         console.log('学习会话记录成功:', response.data.data);
         
         // 更新本地进度状态
         const sessionStats = response.data.data.session_stats;
-        setProgress(prev => ({
-          learned: prev.learned + sessionStats.correct_answers,
-          total: prev.total
-        }));
+        if (sessionStats) {
+          setProgress(prev => {
+            const newProgress = {
+              learned: prev.learned + (sessionStats.correct_answers || 0),
+              total: prev.total
+            };
+            console.log('更新本地进度:', prev, '->', newProgress);
+            return newProgress;
+          });
+        }
 
-        // 重新获取最新的学习数据
+        // 重新获取最新的学习数据以确保同步
+        console.log('重新获取学习数据以确保同步');
         await fetchDailyWords();
+        
+        // 额外触发一次进度同步，确保数据一致性
+        setTimeout(() => {
+          syncProgress();
+        }, 1000);
+      } else {
+        throw new Error(response.data.message || '记录学习进度失败');
       }
     } catch (err: any) {
       console.error('记录学习会话失败 - 详细错误:', {
@@ -130,7 +197,9 @@ export const LearningProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         status: err.response?.status,
         statusText: err.response?.statusText
       });
-      setError(err.response?.data?.message || err.response?.data?.error || '记录学习进度失败');
+      
+      const errorMessage = err.response?.data?.message || err.response?.data?.error || err.message || '记录学习进度失败';
+      setError(errorMessage);
       throw err;
     }
   }, [fetchDailyWords]);
@@ -181,6 +250,32 @@ export const LearningProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, []);
 
+  useEffect(() => {
+    const handleAuthStateChange = async () => {
+      const userId = await getCurrentUserId();
+      if (userId) {
+        await syncProgress();
+      } else {
+        setDailyWords([]);
+        setProgress({ learned: 0, total: 0 });
+        setMasteredWordIds([]);
+        setError('请登录以保存学习进度');
+      }
+    };
+
+    handleAuthStateChange();
+
+    const unsubscribe = supabase.auth.onAuthStateChange(async (event: string, session: any) => {
+      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+        await handleAuthStateChange();
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [syncProgress]);
+
   return (
     <LearningContext.Provider
       value={{
@@ -191,6 +286,7 @@ export const LearningProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         fetchDailyWords,
         markWordAsMastered,
         recordLearningSession,
+        syncProgress,
         masteredWordIds
       }}
     >
