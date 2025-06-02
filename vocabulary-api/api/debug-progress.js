@@ -137,10 +137,88 @@ export default async function handler(req, res) {
           }
         }
         
+        // 方法3: 尝试查看已经存在的表有什么字段（通过错误信息推断）
+        const fieldTests = {};
+        
+        // 测试user_progress是否有这些字段
+        const userProgressFields = ['id', 'user_id', 'word_id', 'mastery_level', 'last_reviewed', 'review_count', 'correct_count'];
+        for (const field of userProgressFields) {
+          try {
+            const { data, error } = await supabase
+              .from('user_progress')
+              .select(field)
+              .limit(1);
+            
+            fieldTests[`user_progress.${field}`] = error ? 
+              `不存在: ${error.message}` : '存在';
+          } catch (e) {
+            fieldTests[`user_progress.${field}`] = `异常: ${e.message}`;
+          }
+        }
+
+        // 测试learning_sessions是否有这些字段  
+        const sessionFields = ['id', 'user_id', 'session_type', 'words_studied', 'correct_answers', 'total_questions', 'duration_seconds', 'completed_at'];
+        for (const field of sessionFields) {
+          try {
+            const { data, error } = await supabase
+              .from('learning_sessions')
+              .select(field)
+              .limit(1);
+            
+            fieldTests[`learning_sessions.${field}`] = error ? 
+              `不存在: ${error.message}` : '存在';
+          } catch (e) {
+            fieldTests[`learning_sessions.${field}`] = `异常: ${e.message}`;
+          }
+        }
+
+        // 新增：尝试不同的session_type值来找出有效值
+        const sessionTypeTests = {};
+        const possibleTypes = ['reading', 'listening', 'writing', 'speaking', 'daily', 'practice', 'exam', 'review'];
+        
+        for (const sessionType of possibleTypes) {
+          try {
+            const { data: wordData } = await supabase.from('words').select('id').limit(1);
+            if (wordData && wordData[0]) {
+              const { v4: uuidv4 } = await import('uuid');
+              const testSessionId = uuidv4();
+              const realWordId = wordData[0].id;
+              
+              const { error: sessionError } = await supabase
+                .from('learning_sessions')
+                .insert({
+                  id: testSessionId,
+                  user_id: testUserId,
+                  session_type: sessionType,
+                  words_studied: [realWordId],
+                  correct_answers: 1,
+                  total_questions: 1,
+                  duration_seconds: 60,
+                  completed_at: new Date().toISOString()
+                });
+              
+              sessionTypeTests[`session_type_${sessionType}`] = sessionError ? 
+                `失败: ${sessionError.message}` : '成功';
+                
+              // 如果插入成功，立即删除测试数据
+              if (!sessionError) {
+                await supabase.from('learning_sessions').delete().eq('id', testSessionId);
+                break; // 找到有效值就停止测试
+              }
+            }
+          } catch (e) {
+            sessionTypeTests[`session_type_${sessionType}`] = `异常: ${e.message}`;
+          }
+        }
+
         debugInfo.database = {
           connection: '成功',
           tables: tableTests,
-          ...(req.query.testWrite === 'true' && { writeTests })
+          ...(req.query.testWrite === 'true' && { 
+            writeTests,
+            fieldTests,
+            sessionTypeTests 
+          })
         };
       } catch (error) {
         debugInfo.database = {
