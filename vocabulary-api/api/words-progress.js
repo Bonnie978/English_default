@@ -129,7 +129,7 @@ async function recordLearningSession(userId, words, sessionType = 'daily_study')
         id: sessionId,
         user_id: userId,
         session_type: sessionType,
-        words_studied: totalWords,
+        words_studied: words.map(w => w.wordId),
         correct_answers: correctWords,
         total_questions: totalWords,
         duration_seconds: estimatedDurationSeconds,
@@ -186,23 +186,23 @@ async function getUserLearningStats(userId) {
       .from('learning_sessions')
       .select('*')
       .eq('user_id', userId)
-      .gte('created_at', sevenDaysAgo)
-      .order('created_at', { ascending: false });
+      .gte('completed_at', sevenDaysAgo)
+      .order('completed_at', { ascending: false });
 
     if (sessionError) throw sessionError;
 
     // 3. 计算统计数据
     const totalWords = progressData.length;
-    const masteredWords = progressData.filter(p => p.mastery_level >= 4).length;
-    const learningWords = progressData.filter(p => p.mastery_level >= 2 && p.mastery_level < 4).length;
-    const difficultWords = progressData.filter(p => p.is_difficult || p.mastery_level < 2).length;
+    const masteredWords = progressData.filter(p => p.mastery_level >= 80).length; // 80%以上为掌握
+    const learningWords = progressData.filter(p => p.mastery_level >= 20 && p.mastery_level < 80).length;
+    const difficultWords = progressData.filter(p => p.mastery_level < 20).length;
 
-    const totalAttempts = progressData.reduce((sum, p) => sum + p.correct_count + p.incorrect_count, 0);
-    const totalCorrect = progressData.reduce((sum, p) => sum + p.correct_count, 0);
+    const totalAttempts = progressData.reduce((sum, p) => sum + (p.review_count || 0), 0);
+    const totalCorrect = progressData.reduce((sum, p) => sum + (p.correct_count || 0), 0);
     const overallAccuracy = totalAttempts > 0 ? totalCorrect / totalAttempts : 0;
 
     const todayStudied = recentSessions.filter(s => {
-      const sessionDate = new Date(s.created_at).toDateString();
+      const sessionDate = new Date(s.completed_at).toDateString();
       const today = new Date().toDateString();
       return sessionDate === today;
     }).length;
@@ -214,22 +214,21 @@ async function getUserLearningStats(userId) {
         learning_words: learningWords,
         difficult_words: difficultWords,
         overall_accuracy: overallAccuracy,
-        study_streak: Math.max(...progressData.map(p => p.study_streak || 0), 0)
+        study_streak: progressData.length > 0 ? Math.max(...progressData.map(p => p.review_count || 0)) : 0
       },
       recent_activity: {
         today_sessions: todayStudied,
         weekly_sessions: recentSessions.length,
         avg_daily_accuracy: recentSessions.length > 0 
-          ? recentSessions.reduce((sum, s) => sum + s.accuracy, 0) / recentSessions.length 
+          ? recentSessions.reduce((sum, s) => sum + (s.correct_answers / Math.max(s.total_questions, 1)), 0) / recentSessions.length 
           : 0
       },
       level_distribution: {
-        level_0: progressData.filter(p => p.mastery_level === 0).length,
-        level_1: progressData.filter(p => p.mastery_level === 1).length,
-        level_2: progressData.filter(p => p.mastery_level === 2).length,
-        level_3: progressData.filter(p => p.mastery_level === 3).length,
-        level_4: progressData.filter(p => p.mastery_level === 4).length,
-        level_5: progressData.filter(p => p.mastery_level === 5).length
+        level_0_19: progressData.filter(p => p.mastery_level >= 0 && p.mastery_level < 20).length,
+        level_20_39: progressData.filter(p => p.mastery_level >= 20 && p.mastery_level < 40).length,
+        level_40_59: progressData.filter(p => p.mastery_level >= 40 && p.mastery_level < 60).length,
+        level_60_79: progressData.filter(p => p.mastery_level >= 60 && p.mastery_level < 80).length,
+        level_80_100: progressData.filter(p => p.mastery_level >= 80).length
       }
     };
   } catch (error) {

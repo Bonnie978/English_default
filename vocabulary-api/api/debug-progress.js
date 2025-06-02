@@ -75,7 +75,7 @@ export default async function handler(req, res) {
                 id: testSessionId,
                 user_id: testUserId,
                 session_type: 'debug_test',
-                words_studied: 1,
+                words_studied: ['test-word-id'],
                 correct_answers: 1,
                 total_questions: 1,
                 duration_seconds: 60,
