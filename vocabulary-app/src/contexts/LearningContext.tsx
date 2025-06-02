@@ -105,7 +105,7 @@ export const LearningProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       
       const response = await api.post(`/api/words-progress?userId=${userId}`, {
         words: words,
-        sessionType: 'daily_study'
+        sessionType: 'reading'
       });
 
       console.log('API响应:', response.data);
