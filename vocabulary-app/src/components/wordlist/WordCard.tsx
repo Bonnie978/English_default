@@ -21,9 +21,19 @@ const WordCard: React.FC<WordCardProps> = ({
   onToggleMastered,
   onPlayPronunciation
 }) => {
+  // 映射数据库字段到前端期望的字段
+  const wordData = {
+    id: word.id,
+    spelling: word.spelling || (word as any).english || '未知单词',
+    pronunciation: word.pronunciation || '暂无发音',
+    partOfSpeech: word.partOfSpeech || (word as any).part_of_speech || '词性',
+    definitions: word.definitions || [(word as any).chinese] || ['暂无释义'],
+    examples: word.examples || [(word as any).example_sentence] || ['暂无例句']
+  };
+  
   // 兼容不同的字段名和格式
-  const definitions = word.definitions || (word as any).definition || [];
-  const examples = word.examples || (word as any).example || [];
+  const definitions = wordData.definitions || [];
+  const examples = wordData.examples || [];
   
   // 确保definitions是数组格式
   const definitionArray = Array.isArray(definitions) ? definitions : [definitions].filter(Boolean);
@@ -34,7 +44,7 @@ const WordCard: React.FC<WordCardProps> = ({
     <CardContainer>
       {/* 单词标题栏 */}
       <CardHeader>
-        <WordTitle>{word.spelling}</WordTitle>
+        <WordTitle>{wordData.spelling}</WordTitle>
         <MasteredButton 
           $isMastered={isMastered}
           onClick={onToggleMastered}
@@ -50,7 +60,7 @@ const WordCard: React.FC<WordCardProps> = ({
       <CardContent>
         <ContentRow>
           <Label>发音:</Label>
-          <Value>{word.pronunciation || '暂无发音'}</Value>
+          <Value>{wordData.pronunciation}</Value>
           <PronunciationButton 
             onClick={onPlayPronunciation}
             aria-label="播放发音"
@@ -63,7 +73,7 @@ const WordCard: React.FC<WordCardProps> = ({
         
         <ContentRow>
           <Label>词性:</Label>
-          <Value>{word.partOfSpeech || (word as any).part_of_speech || '暂无词性'}</Value>
+          <Value>{wordData.partOfSpeech}</Value>
         </ContentRow>
         
         <ContentRow>
@@ -77,7 +87,7 @@ const WordCard: React.FC<WordCardProps> = ({
           <Label>例句:</Label>
           <Example>{exampleArray[0] || '暂无例句'}</Example>
           <MaskedExample>
-            {exampleArray[0] ? exampleArray[0].replace(word.spelling, '_________') : '暂无例句'}
+            {exampleArray[0] ? exampleArray[0].replace(wordData.spelling, '_________') : '暂无例句'}
           </MaskedExample>
         </ExampleSection>
       </CardContent>
