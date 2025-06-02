@@ -3,23 +3,35 @@ import { supabase } from '../config/supabase';
 
 // 根据环境设置API地址
 const getApiBaseUrl = () => {
+  console.log('🔍 API Base URL Debug:', {
+    REACT_APP_API_URL: process.env.REACT_APP_API_URL,
+    NODE_ENV: process.env.NODE_ENV,
+    hasApiUrl: !!process.env.REACT_APP_API_URL
+  });
+  
   // 如果设置了环境变量，优先使用（用于分开部署）
   if (process.env.REACT_APP_API_URL) {
+    console.log('✅ Using REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
     return process.env.REACT_APP_API_URL;
   }
   
   // 开发环境
   if (process.env.NODE_ENV === 'development') {
+    console.log('✅ Using development URL: http://localhost:3001');
     return 'http://localhost:3001';
   }
   
   // 生产环境 - 使用相对路径，通过Vercel代理到后端
   // vercel.json 中配置了 /api/* 代理到后端服务器
+  console.log('✅ Using production proxy: empty string');
   return '';
 };
 
+const finalBaseUrl = getApiBaseUrl();
+console.log('🎯 Final API Base URL:', finalBaseUrl);
+
 const api = axios.create({
-  baseURL: getApiBaseUrl(),
+  baseURL: finalBaseUrl,
   timeout: 25000, // 25秒超时 - 匹配后端DeepSeek API处理时间
   headers: {
     'Content-Type': 'application/json',
